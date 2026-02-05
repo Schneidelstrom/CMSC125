@@ -20,127 +20,104 @@ import java.awt.event.WindowListener;
 public class LogInView extends JFrame {
     private JTextField usernameField;
     private JButton loginButton, powerButton;
-
-    private static final Font HEADER_FONT = new Font("Monospaced", Font.BOLD, 64);
-    private static final Font INPUT_FONT = new Font("SansSerif", Font.PLAIN, 17);
-    private static final Color BG_COLOR = Color.WHITE;
-    private static final Color USER_INPUT_COLOR = Color.BLACK;
-    private static final Color PLACEHOLDER_INPUT_COLOR = Color.GRAY;
-    private static final String APP_HEADER = "DE_CRYPT OS";
-
-    // Public constant so Controller can reference it if needed, though ideally, the controller shouldn't care about the specific string.
     public static final String LOGIN_PLACEHOLDER = "Enter Username";
+    private static final Color PLACEHOLDER_COLOR = Color.GRAY, TEXT_COLOR = Color.BLACK;
 
     public LogInView() {
-        initializeFrame();
-        initializeComponents();
-        layoutComponents();
-    }
-
-    private void initializeFrame() {
         setTitle("De_crypt Login");
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 
         JPanel contentPane = new JPanel(new BorderLayout());
-        contentPane.setBackground(BG_COLOR);
+        contentPane.setBackground(Color.WHITE);
         setContentPane(contentPane);
+
+        initUI();
+        layoutUI();
     }
 
-    private void initializeComponents() {
+    private void initUI() {
         usernameField = new JTextField(LOGIN_PLACEHOLDER, 23);
-        usernameField.setFont(INPUT_FONT);
-        usernameField.setForeground(PLACEHOLDER_INPUT_COLOR);
-        usernameField.addFocusListener(createPlaceholderFocusListener());
+        usernameField.setFont(new Font("SansSerif", Font.PLAIN, 17));
+        usernameField.setForeground(PLACEHOLDER_COLOR);
+
+        usernameField.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (usernameField.getText().equals(LOGIN_PLACEHOLDER)) {
+                    usernameField.setText("");
+                    usernameField.setForeground(TEXT_COLOR);
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (usernameField.getText().isEmpty()) {
+                    usernameField.setForeground(PLACEHOLDER_COLOR);
+                    usernameField.setText(LOGIN_PLACEHOLDER);
+                }
+            }
+        });
 
         loginButton = new JButton("→");
-
         powerButton = new JButton("⏻");
-        powerButton.setFont(new Font("SansSerif", Font.BOLD, 64));
+        powerButton.setFont(new Font("SansSerif", Font.BOLD, 32));
         powerButton.setForeground(Color.RED);
     }
 
-    private void layoutComponents() {
-        JPanel centerPanel = new JPanel(new GridBagLayout());
-        centerPanel.setBackground(BG_COLOR);
-
+    private void layoutUI() {
+        JPanel loginManager = new JPanel(new GridBagLayout());
+        loginManager.setBackground(Color.WHITE);
         GridBagConstraints gbc = new GridBagConstraints();
 
-        JLabel titleLabel = new JLabel(APP_HEADER);
-        titleLabel.setFont(HEADER_FONT);
+        JLabel title = new JLabel("DE_CRYPT OS");
+        title.setFont(new Font("Monospaced", Font.BOLD, 64));
 
-        gbc.gridx = 0; gbc.gridy = 0;
-        gbc.gridwidth = 2;
-        centerPanel.add(titleLabel, gbc);
+        gbc.gridx=0; gbc.gridy=0; gbc.gridwidth=2;
+        loginManager.add(title, gbc);
 
-        gbc.gridx = 0; gbc.gridy = 1;
-        gbc.gridwidth = 1;
-        centerPanel.add(usernameField, gbc);
+        gbc.gridy=1; gbc.gridwidth=1;
+        loginManager.add(usernameField, gbc);
 
-        gbc.gridx = 1; gbc.gridy = 1;
-        centerPanel.add(loginButton, gbc);
+        gbc.gridx=1;
+        loginManager.add(loginButton, gbc);
 
-        JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        bottomPanel.setBackground(BG_COLOR);
-        bottomPanel.add(powerButton);
+        JPanel buttonsManager = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        buttonsManager.setBackground(Color.WHITE);
+        buttonsManager.add(powerButton);
 
-        add(centerPanel, BorderLayout.CENTER);
-        add(bottomPanel, BorderLayout.SOUTH);
+        add(loginManager, BorderLayout.CENTER);
+        add(buttonsManager, BorderLayout.SOUTH);
     }
 
-    public String getUsernameInput() {
+    public String getUsername() {
         return usernameField.getText();
     }
 
-    public boolean isPlaceholderActive() {
-        return usernameField.getForeground() == PLACEHOLDER_INPUT_COLOR;
-    }
-
-    public void addLoginListener(ActionListener listener) {
-        loginButton.addActionListener(listener);
-        usernameField.addActionListener(listener);
-    }
-
-    public void addPowerListener(ActionListener listener) {
-        powerButton.addActionListener(listener);
-    }
-
-    // Helper to attach window listener (for the 'X' button)
-    public void addWindowCloseListener(WindowListener listener) {
-        addWindowListener(listener);
-    }
-
-    public void showErrorMessage(String message) {
-        JOptionPane.showMessageDialog(this, message, "Login Error", JOptionPane.WARNING_MESSAGE);
-    }
-
-    public int showConfirmation(String message, String title) {
-        Object[] options = {"Confirm", "Cancel"};
-        return JOptionPane.showOptionDialog(this, message, title,
-                JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-                null, options, options[1]);
+    public boolean isPlaceholder() {
+        return usernameField.getForeground() == PLACEHOLDER_COLOR;
     }
 
     public void close() {
         dispose();
     }
 
-    private FocusListener createPlaceholderFocusListener() {
-        return new FocusListener() {
-            @Override
-            public void focusGained(FocusEvent e) {
-                if (usernameField.getText().equals(LOGIN_PLACEHOLDER)) {
-                    usernameField.setText("");
-                    usernameField.setForeground(USER_INPUT_COLOR);
-                }
-            }
-            @Override
-            public void focusLost(FocusEvent e) {
-                if (usernameField.getText().isEmpty()) {
-                    usernameField.setForeground(PLACEHOLDER_INPUT_COLOR);
-                    usernameField.setText(LOGIN_PLACEHOLDER);
-                }
-            }
-        };
+    public void addLoginListener(ActionListener l) {
+        loginButton.addActionListener(l);
+        usernameField.addActionListener(l);
+    }
+
+    public void addPowerListener(ActionListener l) {
+        powerButton.addActionListener(l);
+    }
+
+    public void addWindowCloseListener(WindowListener l) {
+        addWindowListener(l);
+    }
+
+    public void showError(String msg) {
+        JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.WARNING_MESSAGE);
+    }
+    public int showConfirm(String msg) {
+        return JOptionPane.showConfirmDialog(this, msg, "Confirm", JOptionPane.YES_NO_OPTION);
     }
 }

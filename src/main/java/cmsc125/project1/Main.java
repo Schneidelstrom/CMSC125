@@ -1,20 +1,30 @@
 package cmsc125.project1;
 
-import cmsc125.project1.models.UserModel;
-import cmsc125.project1.views.LogInView;
-import cmsc125.project1.controllers.LogInController;
+import cmsc125.project1.models.*;
+import cmsc125.project1.views.*;
+import cmsc125.project1.controllers.*;
 
 import javax.swing.SwingUtilities;
 
 public class Main {
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            UserModel model = new UserModel();
-            LogInView view = new LogInView();
+        SwingUtilities.invokeLater(Main::showLoginScreen);
+    }
 
-            new LogInController(model, view);
+    public static void showLoginScreen() {
+        UserModel model = new UserModel();
+        LogInView view = new LogInView();
 
-            view.setVisible(true);
-        });
+        new LogInController(model, view, () -> showDashboard(model.getUsername()));
+
+        view.setVisible(true);
+    }
+
+    public static void showDashboard(String username) {
+        DashboardModel model = new DashboardModel();
+        DashboardView view = new DashboardView(username);
+        new DashboardController(model, view);
+
+        view.setVisible(true);
     }
 }
