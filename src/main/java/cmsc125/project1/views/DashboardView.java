@@ -25,6 +25,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+/* This class is the "desktop screen" of the game
+ * TODO: remove one of the JInternalFrames, there are two which makes it redundant
+ * The JDesktopPane automatically generates a jinternal frame, however there is also an implementation of JInternalFrame which 
+ * was added to the borderlayout.south at line 36
+ *
+ *
+ * */
+
 public class DashboardView extends JFrame {
     private final JDesktopPane desktopPane;
     private final JPanel taskbarPanel, iconsPanel;

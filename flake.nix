@@ -16,6 +16,7 @@
           packages = with pkgs; [
              maven
              javaPackages.compiler.openjdk25
+             python315
           ];
 
           shellHook = ''
