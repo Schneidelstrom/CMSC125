@@ -1,29 +1,15 @@
 package cmsc125.project1.views;
 
-import javax.swing.JFrame;
-import javax.swing.JInternalFrame;
-import javax.swing.JPanel;
-import javax.swing.JToggleButton;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JPopupMenu;
-import javax.swing.JMenuItem;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.BorderFactory;
-import javax.swing.JDesktopPane;
-import javax.swing.JLayeredPane;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 import javax.swing.event.PopupMenuListener;
 import javax.swing.event.PopupMenuEvent;
-import java.awt.GridLayout;
-import java.awt.BorderLayout;
-import java.awt.FlowLayout;
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Font;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
 /* This class is the "desktop screen" of the game
  * TODO: remove one of the JInternalFrames, there are two which makes it redundant
@@ -36,44 +22,66 @@ import java.awt.event.MouseEvent;
 public class DashboardView extends JFrame {
     private final JDesktopPane desktopPane;
     private final JPanel taskbarPanel, iconsPanel;
+    private JPanel selectedIcon = null;
     private JToggleButton startButton;
     private JPopupMenu startMenu;
     private JMenuItem logoutItem, shutdownItem;
+    private static final Color SELECTION_COLOR = new Color(0, 120, 215, 75), HOVER_COLOR = new Color(255, 255, 255, 50);
+    private static final int ICON_SIZE = 64;
+    private static final String ASSETS_PATH = "/cmsc125/project1/assets/";
 
     public DashboardView(String username) {
         setTitle("De_crypt OS - User: " + username);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-
         setLayout(new BorderLayout());
 
-        desktopPane = new JDesktopPane();
-        desktopPane.setBackground(Color.PINK);
+        desktopPane = new JDesktopPane() {
+            private Image wallpaper;
+            {
+                wallpaper = loadAssetImage("wallpaper.png");
+            }
 
-        iconsPanel = new JPanel(new GridLayout(0, 1, 0, 20));
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                if (wallpaper != null) {
+                    g.drawImage(wallpaper, 0, 0, getWidth(), getHeight(), this);
+                } else {
+                    g.setColor(new Color(30, 30, 30));
+                    g.fillRect(0, 0, getWidth(), getHeight());
+                }
+            }
+        };
+
+        iconsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 30));
         iconsPanel.setOpaque(false);
-        iconsPanel.setBounds(20, 20, 150, 1000);
+        desktopPane.add(iconsPanel, JLayeredPane.FRAME_CONTENT_LAYER);
 
-        desktopPane.add(iconsPanel, JLayeredPane.DEFAULT_LAYER);
+        desktopPane.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                iconsPanel.setBounds(0, 0, desktopPane.getWidth(), desktopPane.getHeight());
+                iconsPanel.revalidate();
+            }
+        });
+
         add(desktopPane, BorderLayout.CENTER);
 
         taskbarPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 2));
-        taskbarPanel.setBackground(Color.LIGHT_GRAY);
-        taskbarPanel.setBorder(BorderFactory.createEtchedBorder());
+        taskbarPanel.setBackground(new Color(236, 240, 241));
+        taskbarPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Color.DARK_GRAY));
 
         createStartMenu();
         taskbarPanel.add(startButton);
-
         add(taskbarPanel, BorderLayout.SOUTH);
     }
 
     private void createStartMenu() {
         startButton = new JToggleButton("Start");
         startMenu = new JPopupMenu();
-
         logoutItem = new JMenuItem("Logout");
         shutdownItem = new JMenuItem("Shutdown");
-
         startMenu.add(logoutItem);
         startMenu.add(shutdownItem);
 
@@ -100,40 +108,62 @@ public class DashboardView extends JFrame {
     }
 
     public void addDesktopIcon(String name, ActionListener onClick) {
-        JPanel iconPanel = new JPanel();
-        iconPanel.setLayout(new BoxLayout(iconPanel, BoxLayout.Y_AXIS));
-        iconPanel.setOpaque(false);
-        iconPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        JPanel iconWrapper = new JPanel();
+        iconWrapper.setLayout(new BoxLayout(iconWrapper, BoxLayout.Y_AXIS));
+        iconWrapper.setOpaque(false);
+        iconWrapper.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
 
-        JPanel graphic = new JPanel();
-        graphic.setBackground(Color.GREEN);
-        graphic.setBorder(BorderFactory.createLineBorder(Color.WHITE, 2));
+        JLabel iconGraphic = new JLabel(getIconPlaceholder(name));
+        iconGraphic.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel label = new JLabel(name);
-        label.setForeground(Color.WHITE);
-        label.setFont(new Font("SansSerif", Font.BOLD, 15));
-        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        JLabel textLabel = new JLabel(name);
+        textLabel.setForeground(Color.WHITE);
+        textLabel.setFont(new Font("SansSerif", Font.BOLD, 12));
+        textLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        iconPanel.add(graphic);
-        iconPanel.add(Box.createVerticalStrut(5));
-        iconPanel.add(label);
+        iconWrapper.add(iconGraphic);
+        iconWrapper.add(Box.createVerticalStrut(5));
+        iconWrapper.add(textLabel);
 
-        iconPanel.addMouseListener(new MouseAdapter() {
+        JPanel gridCell = new JPanel(new GridBagLayout());
+        gridCell.setOpaque(false);
+        gridCell.setPreferredSize(new Dimension(100, 120));
+        gridCell.add(iconWrapper);
+
+        iconWrapper.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if(e.getClickCount() == 2) {
+                handleSingleClick(iconWrapper);
+                if (e.getClickCount() == 2) {
                     onClick.actionPerformed(null);
+                }
+            }
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (selectedIcon != iconWrapper) {
+                    iconWrapper.setOpaque(true);
+                    iconWrapper.setBackground(HOVER_COLOR);
+                    iconWrapper.repaint();
+                }
+            }
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (selectedIcon != iconWrapper) {
+                    iconWrapper.setOpaque(false);
+                    iconWrapper.repaint();
                 }
             }
         });
 
-        iconsPanel.add(iconPanel);
+        iconsPanel.add(iconWrapper);
+        iconsPanel.revalidate();
+        iconsPanel.repaint();
     }
 
     public void addInternalFrame(JInternalFrame frame) {
-        desktopPane.add(frame, JLayeredPane.MODAL_LAYER);
+        desktopPane.add(frame);
         frame.setVisible(true);
-        try { frame.setSelected(true); } catch (Exception ignored) {}
+        try { frame.setSelected(true); } catch (java.beans.PropertyVetoException ignored) {}
     }
 
     public void addTaskbarButton(JToggleButton btn) {
@@ -148,12 +178,12 @@ public class DashboardView extends JFrame {
         taskbarPanel.repaint();
     }
 
-    public void addLogoutListener(ActionListener l) {
-        logoutItem.addActionListener(l);
+    public void addLogoutListener(ActionListener listener) {
+        logoutItem.addActionListener(listener);
     }
 
-    public void addShutdownListener(ActionListener l) {
-        shutdownItem.addActionListener(l);
+    public void addShutdownListener(ActionListener listener) {
+        shutdownItem.addActionListener(listener);
     }
 
     public void addWindowCloseListener(java.awt.event.WindowListener listener) {
@@ -162,5 +192,50 @@ public class DashboardView extends JFrame {
 
     public int showConfirm(String msg) {
         return JOptionPane.showConfirmDialog(this, msg, "System", JOptionPane.YES_NO_OPTION);
+    }
+
+    private BufferedImage loadAssetImage(String path) {
+        try {
+            URL url = getClass().getResource(ASSETS_PATH + path);
+            return ImageIO.read(url);
+        } catch (IOException e) {
+            System.err.println("Could not load asset: " + path);
+        }
+        return null;
+    }
+
+    private Icon getIconPlaceholder(String name) {
+        String fileName = "icons/" + name.toLowerCase().replace(" ", "_") + ".png";
+
+        BufferedImage img = loadAssetImage(fileName);
+        if (img != null) {
+            Image scaled = img.getScaledInstance(ICON_SIZE, ICON_SIZE, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaled);
+        }
+
+        return new Icon() {
+            @Override
+            public void paintIcon(Component c, Graphics g, int x, int y) {
+                Graphics2D g2 = (Graphics2D) g;
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setColor(Color.CYAN);
+                g2.fillRoundRect(x, y, ICON_SIZE, ICON_SIZE, 15, 15);
+            }
+            @Override public int getIconWidth() { return ICON_SIZE; }
+            @Override public int getIconHeight() { return ICON_SIZE; }
+        };
+    }
+
+    private void handleSingleClick(JPanel clickedIcon) {
+        if (selectedIcon != null && selectedIcon != clickedIcon) {
+            selectedIcon.setOpaque(false);
+            selectedIcon.repaint();
+        }
+
+        selectedIcon = clickedIcon;
+        clickedIcon.setOpaque(true);
+        clickedIcon.setBackground(SELECTION_COLOR);
+        clickedIcon.repaint();
+        desktopPane.requestFocusInWindow();
     }
 }
