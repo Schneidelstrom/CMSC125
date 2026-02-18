@@ -3,26 +3,37 @@ package cmsc125.project1.controllers;
 import cmsc125.project1.Main;
 import cmsc125.project1.models.DashboardModel;
 import cmsc125.project1.services.AudioManager;
-import cmsc125.project1.views.DashboardView;
+import cmsc125.project1.views.*;
 
 import javax.swing.JInternalFrame;
 import javax.swing.JToggleButton;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import javax.swing.JOptionPane;
+import java.awt.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 public class DashboardController {
     private final DashboardModel model;
     private final DashboardView view;
+
+    private final Set<String> activeBGApps = new HashSet<>();
+    private static final Set<String> BG_APPS = Set.of("Play", "About", "How to Play");
+    private final Map<String, Point> lastAppPositions = new HashMap<>();
 
     public DashboardController(DashboardModel model, DashboardView view) {
         this.model = model;
         this.view = view;
         initDesktop();
         initSystemMenu();
-        initWindowExit();
+        view.addWindowCloseListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+                performShutdown();
+            }
+        });
     }
 
     private void initDesktop() {
@@ -47,15 +58,6 @@ public class DashboardController {
         view.addShutdownListener(e -> performShutdown());
     }
 
-    private void initWindowExit() {
-        view.addWindowCloseListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                performShutdown();
-            }
-        });
-    }
-
     private void performShutdown() {
         if (view.showConfirm("Shut down system?") == 0) {
             AudioManager.stopBGM();
@@ -64,59 +66,72 @@ public class DashboardController {
     }
 
     private void launchApp(String appName) {
-        JInternalFrame frame = new JInternalFrame(appName, true, true, true, true);
-        frame.setSize(400, 300);
-        frame.setLocation(50, 50);
+        JInternalFrame frame = createFrameInstance(appName);
 
-        if (appName.equals("Play")) {
-            AudioManager.playBGM("game_bgm.wav");
+        if (lastAppPositions.containsKey(appName)) {
+            frame.setLocation(lastAppPositions.get(appName));
+        } else {
+            centerInternalFrame(frame);
         }
 
         JToggleButton taskButton = new JToggleButton(appName);
         taskButton.setSelected(true);
+        taskButton.addActionListener(e -> handleTaskbarClick(frame, taskButton));
 
-        taskButton.addActionListener(e -> {
-            try {
-                if (frame.isIcon()) {
-                    frame.setIcon(false);
-                    frame.setSelected(true);
-                    taskButton.setSelected(true);
-                } else if (frame.isSelected()) {
-                    frame.setIcon(true);
-                    taskButton.setSelected(false);
-                } else {
-                    frame.setSelected(true);
-                    taskButton.setSelected(true);
-                }
-            } catch (java.beans.PropertyVetoException pve) {
-                pve.printStackTrace();
-            }
-        });
+        if (BG_APPS.contains(appName)) {
+            activeBGApps.add(appName);
+            AudioManager.playBGM("game_bgm.wav");
+        }
 
         frame.addInternalFrameListener(new InternalFrameAdapter() {
             @Override
             public void internalFrameClosing(InternalFrameEvent e) {
+                lastAppPositions.put(appName, frame.getLocation());
                 view.removeTaskbarButton(taskButton);
-                if (appName.equals("Play")) AudioManager.stopBGM();
-            }
 
-            @Override
-            public void internalFrameIconified(InternalFrameEvent e) {
-                taskButton.setSelected(false);
+                if (BG_APPS.contains(appName)) {
+                    activeBGApps.remove(appName);
+                    if (activeBGApps.isEmpty()) {
+                        AudioManager.stopBGM();
+                    }
+                }
             }
-
-            @Override
-            public void internalFrameDeiconified(InternalFrameEvent e) {
-                taskButton.setSelected(true);
-            }
-
-            @Override
-            public void internalFrameActivated(InternalFrameEvent e) {
-                taskButton.setSelected(true);
-            }
+            @Override public void internalFrameActivated(InternalFrameEvent e) { taskButton.setSelected(true); }
+            @Override public void internalFrameDeactivated(InternalFrameEvent e) { taskButton.setSelected(false); }
         });
 
         view.addInternalFrame(frame);
         view.addTaskbarButton(taskButton);
+    }
+
+    private void centerInternalFrame(JInternalFrame frame) {
+        Dimension desktopSize = view.getSize();
+        Dimension frameSize = frame.getSize();
+        int x = (desktopSize.width - frameSize.width) / 2;
+        int y = (desktopSize.height - frameSize.height) / 2;
+        frame.setLocation(x, Math.max(0, y - 40));
+    }
+
+    private JInternalFrame createFrameInstance(String appName) {
+        switch (appName) {
+            case "About": return new AboutView();
+            default:
+                JInternalFrame f = new JInternalFrame(appName, true, true, true, true);
+                f.setSize(400, 300);
+                return f;
+        }
+    }
+
+    private void handleTaskbarClick(JInternalFrame frame, JToggleButton btn) {
+        try {
+            if (frame.isIcon()) {
+                frame.setIcon(false);
+                frame.setSelected(true);
+            } else if (frame.isSelected()) {
+                frame.setIcon(true);
+            } else {
+                frame.setSelected(true);
+            }
+        } catch (java.beans.PropertyVetoException pve) { pve.printStackTrace(); }
     }
 }
