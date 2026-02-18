@@ -2,6 +2,7 @@ package cmsc125.project1.controllers;
 
 import cmsc125.project1.Main;
 import cmsc125.project1.models.DashboardModel;
+import cmsc125.project1.services.AudioManager;
 import cmsc125.project1.views.DashboardView;
 
 import javax.swing.JInternalFrame;
@@ -10,6 +11,7 @@ import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import javax.swing.JOptionPane;
 
 public class DashboardController {
     private final DashboardModel model;
@@ -25,13 +27,18 @@ public class DashboardController {
 
     private void initDesktop() {
         for (String appName : model.getApps()) {
-            view.addDesktopIcon(appName, e -> launchApp(appName));
+            view.addDesktopIcon(appName, e -> {
+                AudioManager.playSound("icon_click.wav");
+                launchApp(appName);
+            });
         }
     }
 
     private void initSystemMenu() {
         view.addLogoutListener(e -> {
             if (view.showConfirm("Are you sure you want to logout?") == 0) {
+                AudioManager.playSound("logged_out.wav");
+                AudioManager.stopBGM();
                 view.dispose();
                 Main.showLoginScreen();
             }
@@ -51,6 +58,7 @@ public class DashboardController {
 
     private void performShutdown() {
         if (view.showConfirm("Shut down system?") == 0) {
+            AudioManager.stopBGM();
             System.exit(0);
         }
     }
@@ -59,6 +67,10 @@ public class DashboardController {
         JInternalFrame frame = new JInternalFrame(appName, true, true, true, true);
         frame.setSize(400, 300);
         frame.setLocation(50, 50);
+
+        if (appName.equals("Play")) {
+            AudioManager.playBGM("game_bgm.wav");
+        }
 
         JToggleButton taskButton = new JToggleButton(appName);
         taskButton.setSelected(true);
@@ -85,6 +97,7 @@ public class DashboardController {
             @Override
             public void internalFrameClosing(InternalFrameEvent e) {
                 view.removeTaskbarButton(taskButton);
+                if (appName.equals("Play")) AudioManager.stopBGM();
             }
 
             @Override

@@ -42,6 +42,7 @@ public class LogInController {
 
         if (model.validateUsername(view.getUsername(), LogInView.LOGIN_PLACEHOLDER)) {
             model.setUsername(view.getUsername());
+            cmsc125.project1.services.AudioManager.playSound("logged_in.wav");
             view.close();
             // Trigger the transition defined in Main
             if (onSuccess != null) onSuccess.run();
