@@ -10,6 +10,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.JOptionPane;
 import java.awt.CardLayout;
+import java.awt.Dimension;
 
 public class Main extends JFrame {
     private static Main instance;
@@ -20,9 +21,11 @@ public class Main extends JFrame {
     private Object currentController;
 
     public Main() {
-        super("De_crypt Login");
+        super(AppInfo.getAppName() + " Login");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
+        setMinimumSize(new Dimension(1280, 720));
+        setSize(1280, 720);
+        setLocationRelativeTo(null);
         AppInfo.getInfo();
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -51,7 +54,7 @@ public class Main extends JFrame {
     }
 
     public void showLoginScreen() {
-        setTitle("De_crypt Login");
+        setTitle(AppInfo.getAppName() + " Login");
 
         UserModel model = new UserModel();
         LogInView view = new LogInView();
@@ -67,7 +70,7 @@ public class Main extends JFrame {
     }
 
     public void transitionToDashboard(String username) {
-        setTitle("De_crypt OS - User: " + username);
+        setTitle(AppInfo.getAppName() + " OS - User: " + username);
 
         DashboardModel model = new DashboardModel();
         DashboardView view = new DashboardView(username);
