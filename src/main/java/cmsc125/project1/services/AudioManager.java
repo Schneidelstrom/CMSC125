@@ -3,7 +3,9 @@ package cmsc125.project1.services;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
-import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.FloatControl;
+import java.io.BufferedInputStream;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -11,60 +13,93 @@ import java.util.concurrent.Executors;
 public class AudioManager {
     private static Clip bgmClip;
     private static final String ASSETS_PATH = "/cmsc125/project1/assets/sounds/";
-    private static final ExecutorService soundPool = Executors.newFixedThreadPool(5);
+    private static final ExecutorService soundPool = Executors.newSingleThreadExecutor();
+    public static int sfxVolume = 100, bgmVolume = 100;
+    public static boolean sfxEnabled = true, bgmEnabled = true;
+    public static String currentBGM = "";
 
     public static void playSound(String fileName) {
+        if (!sfxEnabled) return;
+
         soundPool.submit(() -> {
             try {
-                URL url = AudioManager.class.getResource(ASSETS_PATH + fileName);
-                if (url == null) {
-                    System.err.println("Sound not found: " + fileName);
-                    return;
+                Clip clip = loadClip(fileName);
+                if (clip != null) {
+                    setClipVolume(clip, sfxVolume);
+                    clip.start();
                 }
-
-                AudioInputStream stream = AudioSystem.getAudioInputStream(url);
-                Clip clip = AudioSystem.getClip();
-
-                clip.addLineListener(event -> {
-                    if (event.getType() == LineEvent.Type.STOP) clip.close();
-                });
-
-                clip.open(stream);
-                clip.start();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
         });
     }
 
     public static void playBGM(String fileName) {
+        if (fileName == null || fileName.isEmpty()) {
+            if (currentBGM.isEmpty()) return;
+            fileName = currentBGM;
+        } else {
+            currentBGM = fileName;
+        }
+
+        currentBGM = fileName;
+
+        if (!bgmEnabled) {
+            stopBGM();
+            return;
+        }
+
+        if (bgmClip != null && bgmClip.isRunning()) return;
+
+        String finalFileName = fileName;
         soundPool.submit(() -> {
             stopBGM();
-
             try {
-                URL url = AudioManager.class.getResource(ASSETS_PATH + fileName);
-                if (url == null) {
-                    System.err.println("BGM not found: " + fileName);
-                    return;
+                bgmClip = loadClip(finalFileName);
+                if (bgmClip != null) {
+                    setClipVolume(bgmClip, bgmVolume);
+                    bgmClip.loop(Clip.LOOP_CONTINUOUSLY);
+                    bgmClip.start();
                 }
-
-                AudioInputStream stream = AudioSystem.getAudioInputStream(url);
-                bgmClip = AudioSystem.getClip();
-                bgmClip.open(stream);
-                bgmClip.loop(Clip.LOOP_CONTINUOUSLY);
-                bgmClip.start();
-
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            } catch (Exception e) { e.printStackTrace(); }
         });
     }
 
     public static void stopBGM() {
-        if (bgmClip != null && bgmClip.isRunning()) {
-            bgmClip.stop();
+        if (bgmClip != null) {
+            if (bgmClip.isRunning()) bgmClip.stop();
             bgmClip.close();
+            bgmClip = null;
         }
+    }
+
+    public static void updateBGMVolume(int newVolume) {
+        bgmVolume = newVolume;
+        if (bgmClip != null && bgmClip.isOpen()) {
+            setClipVolume(bgmClip, bgmVolume);
+        }
+    }
+
+    private static Clip loadClip(String fileName) throws Exception {
+        URL url = AudioManager.class.getResource(ASSETS_PATH + fileName);
+        if (url == null) return null;
+        InputStream audioSrc = url.openStream();
+        InputStream bufferedIn = new BufferedInputStream(audioSrc);
+        AudioInputStream stream = AudioSystem.getAudioInputStream(bufferedIn);
+        Clip clip = AudioSystem.getClip();
+        clip.open(stream);
+        return clip;
+    }
+
+    private static void setClipVolume(Clip clip, int volumePercent) {
+        if (clip == null) return;
+        try {
+            FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+            float range = gainControl.getMaximum() - gainControl.getMinimum();
+            float gain = (range * (volumePercent / 100.0f)) + gainControl.getMinimum();
+
+            if (volumePercent <= 0) gain = gainControl.getMinimum();
+            if (volumePercent >= 100) gain = gainControl.getMaximum();
+
+            gainControl.setValue(gain);
+        } catch (Exception e) { }
     }
 }

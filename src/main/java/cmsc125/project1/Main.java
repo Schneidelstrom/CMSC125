@@ -40,6 +40,8 @@ public class Main extends JFrame {
     }
 
     public static void main(String[] args) {
+        new cmsc125.project1.models.SettingsModel().loadSettings();
+
         SwingUtilities.invokeLater(() -> {
             instance = new Main();
             instance.showLoginScreen();

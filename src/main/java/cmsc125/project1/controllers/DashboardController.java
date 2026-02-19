@@ -1,7 +1,7 @@
 package cmsc125.project1.controllers;
 
-import cmsc125.project1.Main;
 import cmsc125.project1.models.DashboardModel;
+import cmsc125.project1.models.SettingsModel;
 import cmsc125.project1.services.AudioManager;
 import cmsc125.project1.views.*;
 
@@ -111,6 +111,11 @@ public class DashboardController {
     private JInternalFrame createFrameInstance(String appName) {
         switch (appName) {
             case "About": return new AboutView();
+            case "Settings":
+                SettingsModel sm = new SettingsModel();
+                SettingsView sv = new SettingsView();
+                new SettingsController(sm, sv);
+                return sv;
             default:
                 JInternalFrame f = new JInternalFrame(appName, true, true, true, true);
                 f.setSize(400, 300);
