@@ -22,7 +22,7 @@ public class GameController {
         });
     }
 
-    public void handleWrongGuess() {
+    public void wrongGuess() {
         model.reduceLives();
 
         // update the rings
@@ -36,5 +36,9 @@ public class GameController {
         // save game state, or release other resources.
     }
 
-    public void gameOver() {};
+    public void gameOver() {
+        view.getSecurityRingPanel().triggerSystemFailure();
+        // Disable keyboard so no more input is accepted
+        view.getAlphabetButtons().values().forEach(btn -> btn.setEnabled(false));
+    };
 }

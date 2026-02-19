@@ -11,6 +11,7 @@ public class SecurityRingPanel extends JPanel {
     private final Random random = new Random();
     private int shakeIntensity = 0;
     private int currentLives = 7;
+    private boolean isCompromised = false;
 
     public SecurityRingPanel() {
         setOpaque(false); // Allows the background of the parent to show through
@@ -29,6 +30,15 @@ public class SecurityRingPanel extends JPanel {
             repaint();
         });
         globalTimer.start();
+    }
+
+    /**
+     * Call this from the Controller when lives reach 0
+     */
+    public void triggerSystemFailure() {
+        this.isCompromised = true;
+        this.triggerShake(30); // Heavy final shake
+        repaint();
     }
 
     /**
@@ -57,6 +67,11 @@ public class SecurityRingPanel extends JPanel {
         Graphics2D g2d = (Graphics2D) g;
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
+        if (isCompromised) {
+            drawFailureScreen(g2d);
+            return; // Skip drawing rings
+        }
+
         // Dynamic scaling: find the smallest dimension to keep rings circular
         int side = Math.min(getWidth(), getHeight());
         int ox = (shakeIntensity > 0) ? random.nextInt(shakeIntensity) - (shakeIntensity / 2) : 0;
@@ -79,6 +94,40 @@ public class SecurityRingPanel extends JPanel {
         g2d.setStroke(new BasicStroke(5f));
         float pulse = (float) Math.sin(System.currentTimeMillis() / 300.0) * 5;
         g2d.drawOval(x - (size/2) - (int)pulse, y - (size/2) - (int)pulse, size + (int)pulse*2, size + (int)pulse*2);
+    }
+
+    private void drawFailureScreen(Graphics2D g2d) {
+        g2d.setColor(new Color(150, 0, 0));
+        g2d.fillRect(0, 0, getWidth(), getHeight());
+
+        int cx = getWidth() / 2;
+        int cy = getHeight() / 2 - 50;
+        int[] tx = {cx, cx - 60, cx + 60};
+        int[] ty = {cy - 60, cy + 40, cy + 40};
+
+        g2d.setColor(Color.WHITE);
+        g2d.setStroke(new BasicStroke(5));
+        g2d.drawPolygon(tx, ty, 3);
+
+        g2d.setFont(new Font("Monospaced", Font.BOLD, 60));
+        g2d.drawString("!", cx - 15, cy + 25);
+
+        g2d.setFont(new Font("Monospaced", Font.BOLD, 32));
+        String msg = "SYSTEM COMPROMISED";
+        FontMetrics fm = g2d.getFontMetrics();
+        int textX = (getWidth() - fm.stringWidth(msg)) / 2;
+
+        g2d.setColor(Color.BLACK);
+        g2d.drawString(msg, textX + 3, cy + 103);
+
+        g2d.setColor(Color.WHITE);
+        g2d.drawString(msg, textX, cy + 100);
+
+        g2d.setColor(Color.YELLOW);
+        for (int i = 0; i < getWidth(); i += 40) {
+            g2d.fillRect(i, 0, 20, 15);
+            g2d.fillRect(i, getHeight() - 15, 20, 15);
+        }
     }
 
     private class SecurityRing {
@@ -125,14 +174,20 @@ public class SecurityRingPanel extends JPanel {
             g2d.setStroke(new BasicStroke(1.5f));
             g2d.drawOval(x - size/2, y - size/2, size, size);
 
-            g2d.setFont(new Font("SansSerif", Font.BOLD, (int)(containerSide * 0.04)));
-            g2d.drawString(name, x - (size/5), y + (size/2) - 10);
+            int fontSize = Math.max(10, (int)(containerSide * 0.035));
+            g2d.setFont(new Font("Monospaced", Font.BOLD, fontSize));
+
+            // Center the text horizontally based on string width
+            FontMetrics fm = g2d.getFontMetrics();
+            int textWidth = fm.stringWidth(name);
+            g2d.drawString(name, x - (textWidth / 2), y + (size / 2) - (fontSize / 2));
         }
 
         private void drawCracks(Graphics2D g2d, int x, int y, int size) {
-            g2d.setColor(new Color(0, 0, 0, 180));
+            g2d.setColor(new Color(0, 0, 0, 200));
+            g2d.setStroke(new BasicStroke(1.0f + (damageLevel * 0.5f)));
             Random crackRand = new Random(name.hashCode());
-            for (int i = 0; i < damageLevel * 6; i++) {
+            for (int i = 0; i < damageLevel * 8; i++) {
                 double ang = crackRand.nextDouble() * Math.PI * 2;
                 double d = crackRand.nextDouble() * (size / 2.2);
                 int x1 = x + (int)(Math.cos(ang) * d);
