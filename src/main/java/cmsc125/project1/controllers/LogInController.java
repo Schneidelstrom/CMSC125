@@ -2,10 +2,9 @@ package cmsc125.project1.controllers;
 
 import cmsc125.project1.models.UserModel;
 import cmsc125.project1.views.LogInView;
+import cmsc125.project1.services.AudioManager;
 
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 public class LogInController {
     private UserModel model;
@@ -21,17 +20,8 @@ public class LogInController {
 
     private void initListeners() {
         ActionListener loginAction = e -> attemptLogin();
-
         view.addLoginListener(loginAction);
-
         view.addPowerListener(e -> confirmExit());
-
-        view.addWindowCloseListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                confirmExit();
-            }
-        });
     }
 
     private void attemptLogin() {
@@ -44,7 +34,6 @@ public class LogInController {
             model.setUsername(view.getUsername());
             cmsc125.project1.services.AudioManager.playSound("logged_in.wav");
             view.close();
-            // Trigger the transition defined in Main
             if (onSuccess != null) onSuccess.run();
         } else {
             view.showError("Please enter a valid username.");

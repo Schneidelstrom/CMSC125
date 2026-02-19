@@ -18,22 +18,19 @@ import java.util.Set;
 public class DashboardController {
     private final DashboardModel model;
     private final DashboardView view;
+    private final Runnable logoutHandler;
 
     private final Set<String> activeBGApps = new HashSet<>();
     private static final Set<String> BG_APPS = Set.of("Play", "About", "How to Play");
     private final Map<String, Point> lastAppPositions = new HashMap<>();
 
-    public DashboardController(DashboardModel model, DashboardView view) {
+    public DashboardController(DashboardModel model, DashboardView view, Runnable logoutHandler) {
         this.model = model;
         this.view = view;
+        this.logoutHandler = logoutHandler;
+
         initDesktop();
         initSystemMenu();
-        view.addWindowCloseListener(new java.awt.event.WindowAdapter() {
-            @Override
-            public void windowClosing(java.awt.event.WindowEvent e) {
-                performShutdown();
-            }
-        });
     }
 
     private void initDesktop() {
@@ -50,8 +47,7 @@ public class DashboardController {
             if (view.showConfirm("Are you sure you want to logout?") == 0) {
                 AudioManager.playSound("logged_out.wav");
                 AudioManager.stopBGM();
-                view.dispose();
-                Main.showLoginScreen();
+                if (logoutHandler != null) logoutHandler.run();
             }
         });
 

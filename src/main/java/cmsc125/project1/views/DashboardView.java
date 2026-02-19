@@ -7,7 +7,6 @@ import javax.swing.event.PopupMenuEvent;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 
@@ -19,7 +18,7 @@ import java.net.URL;
  *
  * */
 
-public class DashboardView extends JFrame {
+public class DashboardView extends JPanel {
     private final JDesktopPane desktopPane;
     private final JPanel taskbarPanel, iconsPanel;
     private JPanel selectedIcon = null;
@@ -31,9 +30,6 @@ public class DashboardView extends JFrame {
     private static final String ASSETS_PATH = "/cmsc125/project1/assets/";
 
     public DashboardView(String username) {
-        setTitle("De_crypt OS - User: " + username);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setLayout(new BorderLayout());
 
         desktopPane = new JDesktopPane() {
@@ -54,7 +50,9 @@ public class DashboardView extends JFrame {
             }
         };
 
-        iconsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 30, 30));
+        iconsPanel = new JPanel();
+        iconsPanel.setLayout(new BoxLayout(iconsPanel, BoxLayout.Y_AXIS));
+        iconsPanel.setBorder(BorderFactory.createEmptyBorder(30, 30, 30, 30));
         iconsPanel.setOpaque(false);
         desktopPane.add(iconsPanel, JLayeredPane.FRAME_CONTENT_LAYER);
 
@@ -128,6 +126,8 @@ public class DashboardView extends JFrame {
         JPanel gridCell = new JPanel(new GridBagLayout());
         gridCell.setOpaque(false);
         gridCell.setPreferredSize(new Dimension(100, 120));
+        gridCell.setMaximumSize(new Dimension(100, 120));
+        gridCell.setAlignmentX(Component.LEFT_ALIGNMENT);
         gridCell.add(iconWrapper);
 
         iconWrapper.addMouseListener(new MouseAdapter() {
@@ -155,7 +155,7 @@ public class DashboardView extends JFrame {
             }
         });
 
-        iconsPanel.add(iconWrapper);
+        iconsPanel.add(gridCell);
         iconsPanel.revalidate();
         iconsPanel.repaint();
     }
@@ -184,10 +184,6 @@ public class DashboardView extends JFrame {
 
     public void addShutdownListener(ActionListener listener) {
         shutdownItem.addActionListener(listener);
-    }
-
-    public void addWindowCloseListener(java.awt.event.WindowListener listener) {
-        this.addWindowListener(listener);
     }
 
     public int showConfirm(String msg) {

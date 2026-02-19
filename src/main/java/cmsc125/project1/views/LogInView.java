@@ -17,20 +17,15 @@ import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.WindowListener;
 
-public class LogInView extends JFrame {
+public class LogInView extends JPanel {
     private JTextField usernameField;
     private JButton loginButton, powerButton;
     public static final String LOGIN_PLACEHOLDER = "Enter Username";
     private static final Color PLACEHOLDER_COLOR = Color.GRAY, TEXT_COLOR = Color.BLACK;
 
     public LogInView() {
-        setTitle("De_crypt Login");
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-
-        JPanel contentPane = new JPanel(new BorderLayout());
-        contentPane.setBackground(Color.WHITE);
-        setContentPane(contentPane);
+        setLayout(new BorderLayout());
+        setBackground(Color.WHITE);
 
         initUI();
         layoutUI();
@@ -98,7 +93,8 @@ public class LogInView extends JFrame {
     }
 
     public void close() {
-        dispose();
+        usernameField.setText(LOGIN_PLACEHOLDER);
+        usernameField.setForeground(PLACEHOLDER_COLOR);
     }
 
     public void addLoginListener(ActionListener l) {
@@ -108,10 +104,6 @@ public class LogInView extends JFrame {
 
     public void addPowerListener(ActionListener l) {
         powerButton.addActionListener(l);
-    }
-
-    public void addWindowCloseListener(WindowListener l) {
-        addWindowListener(l);
     }
 
     public void showError(String msg) {

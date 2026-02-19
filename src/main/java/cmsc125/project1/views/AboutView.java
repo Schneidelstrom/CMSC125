@@ -74,7 +74,7 @@ public class AboutView extends JInternalFrame {
 
     private void addCreditsContent() {
         addLabel("DE_CRYPT OS", new Font(Font.MONOSPACED, Font.BOLD, 36), 50);
-        addLabel("v1.0.6-STABLE", TERMINAL_FONT, 30);
+        addLabel("v0.0.7-UNSTABLE", TERMINAL_FONT, 30);
 
         addHeader("SYSTEM_PURPOSE");
         addCenteredTextPane("A cybersecurity simulation game where players defend system Protection Rings by decrypting OS-related terms. Secure the Kernel before Root Access is compromised.");
@@ -99,7 +99,7 @@ public class AboutView extends JInternalFrame {
         linkLabel.setCursor(new Cursor(Cursor.HAND_CURSOR));
         linkLabel.addMouseListener(new MouseAdapter() {
             @Override
-            public void mouseClicked(MouseEvent e) { openBrowser(GITHUB_URL); }
+            public void mouseClicked(MouseEvent e) { openBrowser(); }
         });
         contentPanel.add(linkLabel);
         contentPanel.add(Box.createVerticalStrut(40));
@@ -168,10 +168,10 @@ public class AboutView extends JInternalFrame {
         initialDelay.start();
     }
 
-    private void openBrowser(String url) {
+    private void openBrowser() {
         try {
             if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
-                Desktop.getDesktop().browse(new URI(url));
+                Desktop.getDesktop().browse(new URI(AboutView.GITHUB_URL));
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Could not open browser: " + e.getMessage(), "System Error", JOptionPane.ERROR_MESSAGE);
