@@ -1,6 +1,7 @@
 package cmsc125.project1.controllers;
 
 import cmsc125.project1.models.DashboardModel;
+import cmsc125.project1.models.GameModel;
 import cmsc125.project1.models.SettingsModel;
 import cmsc125.project1.services.AudioManager;
 import cmsc125.project1.views.*;
@@ -43,10 +44,11 @@ public class DashboardController {
     }
 
     private void initSystemMenu() {
+        view.addPlayListener(e -> launchApp("Play"));
         view.addLogoutListener(e -> {
             if (view.showConfirm("Are you sure you want to logout?") == 0) {
                 AudioManager.playSound("logged_out.wav");
-                AudioManager.stopBGM();
+                new Thread(AudioManager::stopBGM).start();
                 if (logoutHandler != null) logoutHandler.run();
             }
         });
@@ -56,7 +58,7 @@ public class DashboardController {
 
     private void performShutdown() {
         if (view.showConfirm("Shut down system?") == 0) {
-            AudioManager.stopBGM();
+            new Thread(AudioManager::stopBGM).start();
             System.exit(0);
         }
     }
@@ -88,7 +90,7 @@ public class DashboardController {
                 if (BG_APPS.contains(appName)) {
                     activeBGApps.remove(appName);
                     if (activeBGApps.isEmpty()) {
-                        AudioManager.stopBGM();
+                        new Thread(AudioManager::stopBGM).start();
                     }
                 }
             }
@@ -116,6 +118,11 @@ public class DashboardController {
                 SettingsView sv = new SettingsView();
                 new SettingsController(sm, sv);
                 return sv;
+            case "Play":
+                GameModel gm = new GameModel();
+                GameView gv = new GameView();
+                new GameController(gm, gv);
+                return gv;
             default:
                 JInternalFrame f = new JInternalFrame(appName, true, true, true, true);
                 f.setSize(400, 300);

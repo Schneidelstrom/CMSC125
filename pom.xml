@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>uptacloban.komsai2023</groupId>
-    <artifactId>De_crypt</artifactId>
+    <artifactId>De_Crypt</artifactId>
     <version>0.0.8-UNSTABLE</version>
 
     <properties>

@@ -24,7 +24,7 @@ public class DashboardView extends JPanel {
     private JPanel selectedIcon = null;
     private JToggleButton startButton;
     private JPopupMenu startMenu;
-    private JMenuItem logoutItem, shutdownItem;
+    private JMenuItem logoutItem, shutdownItem, playItem;
     private static final Color SELECTION_COLOR = new Color(0, 120, 215, 75), HOVER_COLOR = new Color(255, 255, 255, 50);
     private static final int ICON_SIZE = 64;
     private static final String ASSETS_PATH = "/assets/";
@@ -78,8 +78,10 @@ public class DashboardView extends JPanel {
     private void createStartMenu() {
         startButton = new JToggleButton("Start");
         startMenu = new JPopupMenu();
+        playItem = new JMenuItem("Play");
         logoutItem = new JMenuItem("Logout");
         shutdownItem = new JMenuItem("Shutdown");
+        startMenu.add(playItem);
         startMenu.add(logoutItem);
         startMenu.add(shutdownItem);
 
@@ -176,6 +178,10 @@ public class DashboardView extends JPanel {
         taskbarPanel.remove(btn);
         taskbarPanel.revalidate();
         taskbarPanel.repaint();
+    }
+
+    public void addPlayListener(ActionListener listener) {
+        playItem.addActionListener(listener);
     }
 
     public void addLogoutListener(ActionListener listener) {
