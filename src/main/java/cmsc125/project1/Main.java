@@ -1,6 +1,7 @@
 package cmsc125.project1;
 
 import cmsc125.project1.models.*;
+import cmsc125.project1.services.AppInfo;
 import cmsc125.project1.views.*;
 import cmsc125.project1.controllers.*;
 
@@ -22,7 +23,7 @@ public class Main extends JFrame {
         super("De_crypt Login");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
-
+        AppInfo.getInfo();
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {

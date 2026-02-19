@@ -1,5 +1,7 @@
 package cmsc125.project1.views;
 
+import cmsc125.project1.services.AppInfo;
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.text.SimpleAttributeSet;
@@ -29,6 +31,14 @@ public class AboutView extends JInternalFrame {
         setSize(1500, 750);
         setMinimumSize(new Dimension(MIN_WIDTH, MIN_HEIGHT));
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+    }
+
+    @Override
+    public void dispose() {
+        if (scrollTimer != null) {
+            scrollTimer.stop();
+        }
+        super.dispose();
     }
 
     private void initFrame() {
@@ -64,7 +74,7 @@ public class AboutView extends JInternalFrame {
 
         JButton closeBtn = new JButton("TERMINATE_SESSION");
         closeBtn.setFont(TERMINAL_FONT);
-        closeBtn.addActionListener(e -> doDefaultCloseAction());
+        closeBtn.addActionListener(e -> dispose());
 
         bottomPanel.add(closeBtn);
 
@@ -74,7 +84,7 @@ public class AboutView extends JInternalFrame {
 
     private void addCreditsContent() {
         addLabel("DE_CRYPT OS", new Font(Font.MONOSPACED, Font.BOLD, 36), 50);
-        addLabel("v0.0.7-UNSTABLE", TERMINAL_FONT, 30);
+        addLabel("Version: " + AppInfo.getAppVersion(), TERMINAL_FONT, 30);
 
         addHeader("SYSTEM_PURPOSE");
         addCenteredTextPane("A cybersecurity simulation game where players defend system Protection Rings by decrypting OS-related terms. Secure the Kernel before Root Access is compromised.");
