@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 
 public class AudioManager {
     private static Clip bgmClip;
-    private static final String ASSETS_PATH = "/cmsc125/project1/assets/sounds/";
+    private static final String ASSETS_PATH = "/assets/sounds/";
     private static final ExecutorService soundPool = Executors.newSingleThreadExecutor();
     public static int sfxVolume = 100, bgmVolume = 100;
     public static boolean sfxEnabled = true, bgmEnabled = true;

@@ -27,7 +27,7 @@ public class DashboardView extends JPanel {
     private JMenuItem logoutItem, shutdownItem;
     private static final Color SELECTION_COLOR = new Color(0, 120, 215, 75), HOVER_COLOR = new Color(255, 255, 255, 50);
     private static final int ICON_SIZE = 64;
-    private static final String ASSETS_PATH = "/cmsc125/project1/assets/";
+    private static final String ASSETS_PATH = "/assets/";
 
     public DashboardView(String username) {
         setLayout(new BorderLayout());
