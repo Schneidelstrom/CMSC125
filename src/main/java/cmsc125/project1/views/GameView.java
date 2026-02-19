@@ -19,17 +19,31 @@ public class GameView extends JInternalFrame {
     public GameView() {
         super("Game", true, true, true, true);
         initLayout();
-        setSize(900, 600); // Increased default size slightly for better ring visibility
+        setMinimumSize(new Dimension(1125, 600));
+        setSize(1125, 600);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
     }
 
     private void initLayout() {
-        JPanel mainPanel = new JPanel(new BorderLayout());
-        mainPanel.add(createTopPanel(), BorderLayout.NORTH);
-        mainPanel.add(createLeftPanel(), BorderLayout.CENTER);
-        mainPanel.add(createRightPanel(), BorderLayout.EAST);
-        mainPanel.add(createBottomPanel(), BorderLayout.SOUTH);
-        getContentPane().add(mainPanel);
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weighty = 1.0;
+
+        // Left Side (60% width)
+        gbc.gridx = 0;
+        gbc.weightx = 0.6;
+        mainPanel.add(createLeftPanel(), gbc);
+
+        // Right Side (40% width)
+        gbc.gridx = 1;
+        gbc.weightx = 0.4;
+        mainPanel.add(createRightPanel(), gbc);
+
+        // Top and Bottom still use BorderLayout logic but added to the JFrame
+        getContentPane().add(createTopPanel(), BorderLayout.NORTH);
+        getContentPane().add(mainPanel, BorderLayout.CENTER);
+        getContentPane().add(createBottomPanel(), BorderLayout.SOUTH);
     }
 
     private JPanel createTopPanel() {
@@ -48,12 +62,16 @@ public class GameView extends JInternalFrame {
         JPanel leftPanel = new JPanel(new GridBagLayout());
         leftPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridwidth = GridBagConstraints.REMAINDER;
-        gbc.fill = GridBagConstraints.BOTH;
+
+        gbc.gridx = 0;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
 
-        // --- Word Guess Box ---
-        gbc.insets = new Insets(10, 40, 30, 40);
+        // --- 1. Word Guess Box ---
+        gbc.gridy = 0;
+        gbc.weighty = 0.0;
+        gbc.insets = new Insets(20, 50, 20, 50);
+        gbc.anchor = GridBagConstraints.NORTH;
         JPanel wordContainer = new JPanel(new BorderLayout());
         wordContainer.setBackground(new Color(5, 5, 40));
         wordContainer.setBorder(BorderFactory.createCompoundBorder(
@@ -79,18 +97,26 @@ public class GameView extends JInternalFrame {
         leftPanel.add(wordContainer, gbc);
 
         // --- The Keyboard Layout ---
-        gbc.insets = new Insets(0, 10, 10, 10);
-        JPanel keyboardWrapper = new JPanel();
-        keyboardWrapper.setLayout(new BoxLayout(keyboardWrapper, BoxLayout.Y_AXIS));
+        gbc.gridy = 1;
+        gbc.weighty = 1.0; // Give it the remaining space
+        gbc.anchor = GridBagConstraints.CENTER;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.insets = new Insets(0, 10, 20, 10);
+
+        JPanel keyboardWrapper = new JPanel(new GridBagLayout());
         keyboardWrapper.setOpaque(false);
+        GridBagConstraints kbc = new GridBagConstraints();
+        kbc.gridx = 0;
+        kbc.fill = GridBagConstraints.BOTH;
+        kbc.weightx = 1.0;
+        kbc.weighty = 1.0;
 
-        keyboardWrapper.add(createKeyboardRow("QWERTYUIOP", 0));
-        keyboardWrapper.add(Box.createVerticalStrut(15));
-
-        keyboardWrapper.add(createKeyboardRow("ASDFGHJKL", 30));
-        keyboardWrapper.add(Box.createVerticalStrut(15));
-
-        keyboardWrapper.add(createKeyboardRow("ZXCVBNM", 60));
+        kbc.gridy = 0;
+        keyboardWrapper.add(createKeyboardRow("QWERTYUIOP"), kbc);
+        kbc.gridy = 1;
+        keyboardWrapper.add(createKeyboardRow("ASDFGHJKL"), kbc);
+        kbc.gridy = 2;
+        keyboardWrapper.add(createKeyboardRow("ZXCVBNM"), kbc);
 
         leftPanel.add(keyboardWrapper, gbc);
 
@@ -98,16 +124,12 @@ public class GameView extends JInternalFrame {
     }
 
     private JPanel createRightPanel() {
-        // We use BorderLayout here so the SecurityRingPanel can fill the space
-        // while maintaining its own internal centering logic.
         JPanel rightPanel = new JPanel(new BorderLayout());
-        rightPanel.setBorder(BorderFactory.createTitledBorder("System Integrity"));
-        rightPanel.setPreferredSize(new Dimension(350, 0)); // Set a preferred width for the sidebar
+        rightPanel.setOpaque(false);
+        rightPanel.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.DARK_GRAY));
+        rightPanel.setPreferredSize(new Dimension(400, 0));
 
-        // Initialize the Ring Panel
         securityRingPanel = new SecurityRingPanel();
-
-        // Adding it to CENTER allows it to expand/shrink with the window
         rightPanel.add(securityRingPanel, BorderLayout.CENTER);
 
         return rightPanel;
@@ -131,11 +153,10 @@ public class GameView extends JInternalFrame {
         return bottomPanel;
     }
 
-    private JPanel createKeyboardRow(String letters, int leftPadding) {
-        JPanel row = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 0));
+    private JPanel createKeyboardRow(String letters) {
+        // Standardizing the gaps
+        JPanel row = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         row.setOpaque(false);
-
-        row.setBorder(BorderFactory.createEmptyBorder(0, leftPadding, 0, 0));
 
         for (char c : letters.toCharArray()) {
             JButton btn = createStyledButton(String.valueOf(c));
@@ -149,13 +170,17 @@ public class GameView extends JInternalFrame {
         JButton btn = new JButton(text);
         btn.setFont(new Font("Monospaced", Font.BOLD, 18));
 
-        // Force a square shape so they don't squish to fit the letter
-        btn.setPreferredSize(new Dimension(55, 55));
+        // Ensure the button is large enough to show the letter AND the 3D bevel
+        btn.setPreferredSize(new Dimension(60, 60));
 
-        // Add internal breathing room
-        btn.setMargin(new Insets(2, 2, 2, 2));
+        // Match your reference image: Dark keys with White text
+        btn.setBackground(new Color(45, 45, 45));
+        btn.setForeground(Color.WHITE);
 
-        // BevelBorder creates that 3D "key" look
+        btn.setFocusPainted(false);
+        btn.setContentAreaFilled(true); // Ensures background color shows up
+        btn.setOpaque(true);
+
         btn.setBorder(BorderFactory.createRaisedBevelBorder());
 
         return btn;
