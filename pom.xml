@@ -6,7 +6,7 @@
 
     <groupId>uptacloban.komsai2023</groupId>
     <artifactId>De_Crypt</artifactId>
-    <version>0.1.9-DEV</version>
+    <version>0.2.0-DEV</version>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
