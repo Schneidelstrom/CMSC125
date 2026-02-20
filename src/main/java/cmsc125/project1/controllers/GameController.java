@@ -113,12 +113,14 @@ public class GameController {
         view.updatePayloads(currentPayloads, model.getInitialPayloads());
 
         if (model.hasMoreWords()) {
+            AudioManager.playSound("bit_win.wav");
             JOptionPane.showMessageDialog(view, "Payload decrypted! Moving to the next...", "Success", JOptionPane.INFORMATION_MESSAGE);
             model.proceedToNextWord();
             SwingUtilities.invokeLater(this::startNextRound);
         } else {
             // Last word guessed, player wins the game
             gameOver = true;
+            AudioManager.playSound("bit_full_win.wav");
             view.getAlphabetButtons().values().forEach(b -> b.setEnabled(false));
 
             // Score Calculation: (lives * 150) + (initial_payloads * 50)
@@ -131,6 +133,7 @@ public class GameController {
     private void checkLossCondition() {
         if (lives <= 0) {
             gameOver = true;
+            AudioManager.playSound("bit_lose.wav");
             view.getSecurityRingPanel().triggerSystemFailure();
             view.getAlphabetButtons().values().forEach(b -> b.setEnabled(false));
             JOptionPane.showMessageDialog(view, "Root access compromised! The word was: " + secretWord, "System Failure", JOptionPane.ERROR_MESSAGE);
