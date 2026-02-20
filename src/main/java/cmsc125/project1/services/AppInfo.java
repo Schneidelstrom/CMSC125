@@ -19,9 +19,9 @@ public class AppInfo {
             appVersion = prop.getProperty("app.version");
             appName = prop.getProperty("app.name");
         } catch (Exception ex) {
-            IO.println("Could not get app info!");
-            IO.println("Cause: " + ex.getMessage());
-        }
+            System.out.println("Could not get app info!");
+            System.out.println("Cause: " + ex.getMessage());
+        }        
     }
 
     public static String getAppName() {

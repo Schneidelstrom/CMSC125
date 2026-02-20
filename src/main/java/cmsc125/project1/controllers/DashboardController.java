@@ -156,19 +156,19 @@ public class DashboardController {
         frame.setLocation(x, Math.max(0, y - 40));
     }
 
-private JInternalFrame createFrameInstance(String appName, int payloads, String difficulty) {
+    private JInternalFrame createFrameInstance(String appName, int payloads, String difficulty) {
         switch (appName) {
             case "About": return new AboutView();
             case "Leaderboards": 
-                cmsc125.project1.models.LeaderboardsModel lm = new cmsc125.project1.models.LeaderboardsModel();
-                cmsc125.project1.views.LeaderboardsView lv = new cmsc125.project1.views.LeaderboardsView();
-                new cmsc125.project1.controllers.LeaderboardsController(lm, lv);
-                return lv;
+            cmsc125.project1.models.LeaderboardsModel lm = new cmsc125.project1.models.LeaderboardsModel();
+            cmsc125.project1.views.LeaderboardsView lv = new cmsc125.project1.views.LeaderboardsView();
+            new cmsc125.project1.controllers.LeaderboardsController(lm, lv);
+            return lv;
             case "Settings":
-                SettingsModel sm = new SettingsModel();
-                SettingsView sv = new SettingsView();
-                new SettingsController(sm, sv);
-                return sv;
+            SettingsModel sm = new SettingsModel();
+            SettingsView sv = new SettingsView();
+            new SettingsController(sm, sv);
+            return sv;
             case "Play":
                 GameModel gm = new GameModel(payloads);
                 // UPDATE HERE: Pass currentUser and difficulty as the 3rd and 4th arguments
@@ -182,9 +182,9 @@ private JInternalFrame createFrameInstance(String appName, int payloads, String 
                 new HowToPlayController(htpModel, htpView);
                 return htpView;
             default:
-                JInternalFrame f = new JInternalFrame(appName, true, true, true, true);
-                f.setSize(400, 300);
-                return f;
+            JInternalFrame f = new JInternalFrame(appName, true, true, true, true);
+            f.setSize(400, 300);
+            return f;
         }
     }
 
