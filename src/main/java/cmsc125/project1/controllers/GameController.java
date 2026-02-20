@@ -4,15 +4,12 @@ import cmsc125.project1.models.GameModel;
 import cmsc125.project1.views.GameView;
 
 import javax.swing.*;
-import javax.swing.event.InternalFrameAdapter;
-import javax.swing.event.InternalFrameEvent;
-import java.awt.event.ActionEvent;
 import java.util.HashSet;
 import java.util.Set;
 
 public class GameController {
     private final GameModel model;
-    private final GameView view;
+    private GameView view; // View can be null initially
     private final Set<Character> guessedLetters = new HashSet<>();
     private int lives;
     private int payloads;
@@ -21,11 +18,15 @@ public class GameController {
 
     public GameController(GameModel model, GameView view) {
         this.model = model;
-        this.view = view;
+        if (view != null) {
+            setView(view);
+        }
+    }
 
+    public void setView(GameView view) {
+        this.view = view;
         initGame();
         addListeners();
-        setupKeyBindings();
     }
 
     private void initGame() {
@@ -33,7 +34,6 @@ public class GameController {
         this.payloads = model.getPayloads();
         this.secretWord = model.getCurrentWord().toUpperCase();
 
-        // Initialize the view
         view.updatePayloads(payloads, payloads);
         view.getSecurityRingPanel().updateStatus(lives);
         view.updateWordDisplay(secretWord, "");
@@ -41,44 +41,36 @@ public class GameController {
     }
 
     private void addListeners() {
-        view.addInternalFrameListener(new InternalFrameAdapter() {
-            @Override
-            public void internalFrameClosed(InternalFrameEvent e) {
-                dispose();
-            }
-        });
-
+        // Clicks on the on-screen buttons will trigger the game logic
         view.getAlphabetButtons().forEach((character, button) -> {
-            button.addActionListener(e -> handleLetterGuess(character));
+            button.addActionListener(e -> processGuess(character));
         });
     }
 
-    private void setupKeyBindings() {
-        InputMap inputMap = view.getRootPane().getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap actionMap = view.getRootPane().getActionMap();
-
-        for (char c = 'A'; c <= 'Z'; c++) {
-            String actionName = "guess" + c;
-            inputMap.put(KeyStroke.getKeyStroke(c), actionName);
-            char finalC = c;
-            actionMap.put(actionName, new AbstractAction() {
-                @Override
-                public void actionPerformed(ActionEvent e) {
-                    handleLetterGuess(finalC);
-                }
-            });
+    /**
+     * Handles a key press from the physical keyboard.
+     * Finds the corresponding on-screen button and simulates a click.
+     */
+    public void handleKeypress(char letter) {
+        JButton button = view.getAlphabetButtons().get(Character.toUpperCase(letter));
+        if (button != null && button.isEnabled()) {
+            button.doClick();
         }
     }
 
-    private void handleLetterGuess(char letter) {
-        if (gameOver || guessedLetters.contains(letter)) {
-            return; // Don't process input if game is over or letter was already guessed
+    /**
+     * Processes the game logic for a given letter guess.
+     */
+    private void processGuess(char letter) {
+        if (gameOver || guessedLetters.contains(Character.toUpperCase(letter))) {
+            return;
         }
 
-        guessedLetters.add(letter);
-        boolean isCorrect = secretWord.indexOf(letter) != -1;
+        char upperCaseLetter = Character.toUpperCase(letter);
+        guessedLetters.add(upperCaseLetter);
+        boolean isCorrect = secretWord.indexOf(upperCaseLetter) != -1;
 
-        view.markLetterAsUsed(letter, isCorrect);
+        view.markLetterAsUsed(upperCaseLetter, isCorrect);
 
         if (isCorrect) {
             view.updateWordDisplay(secretWord, guessedLetters.toString());
@@ -109,14 +101,11 @@ public class GameController {
             gameOver = true;
             view.getSecurityRingPanel().triggerSystemFailure();
             view.getAlphabetButtons().values().forEach(b -> b.setEnabled(false));
-            JOptionPane.showMessageDialog(view, "System has been Compromised! The word was: " + secretWord, "System " +
-                    "Compromised",
-                JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(view, "Root access compromised! The word was: " + secretWord, "System Failure", JOptionPane.ERROR_MESSAGE);
         }
     }
 
     public void dispose() {
-        // Cleanup logic
         System.out.println("GameController disposed.");
     }
 }

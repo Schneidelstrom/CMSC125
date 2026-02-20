@@ -70,7 +70,6 @@ public class DashboardController {
         panel.add(label);
         panel.add(Box.createVerticalStrut(15));
 
-        // Create a button for each difficulty and add it to the panel
         for (int i = 0; i < difficulties.length; i++) {
             JButton button = new JButton(difficulties[i]);
             button.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -78,7 +77,6 @@ public class DashboardController {
             button.addActionListener(e -> {
                 int payloads = (choice == 0) ? 3 : (choice == 1) ? 5 : 7;
                 launchApp("Play", payloads);
-                // Close the dialog
                 SwingUtilities.getWindowAncestor(panel).dispose();
             });
             panel.add(button);
@@ -94,7 +92,7 @@ public class DashboardController {
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.PLAIN_MESSAGE,
                 null,
-                new Object[]{}, // No default buttons
+                new Object[]{},
                 null
         );
     }
@@ -107,7 +105,7 @@ public class DashboardController {
     }
 
     private void launchApp(String appName) {
-        launchApp(appName, 0); // Default for non-game apps
+        launchApp(appName, 0);
     }
 
     private void launchApp(String appName, int payloads) {
@@ -167,8 +165,10 @@ public class DashboardController {
                 return sv;
             case "Play":
                 GameModel gm = new GameModel(payloads);
-                GameView gv = new GameView();
-                new GameController(gm, gv);
+                // The controller is created here and passed to the view
+                GameController gc = new GameController(gm, null); // View is null initially
+                GameView gv = new GameView(gc::handleKeypress); // Pass the method reference
+                gc.setView(gv); // Now set the view in the controller
                 return gv;
             default:
                 JInternalFrame f = new JInternalFrame(appName, true, true, true, true);
