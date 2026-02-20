@@ -17,13 +17,18 @@ public class GameController {
     private String secretWord;
     private boolean gameOver = false;
 
-    public GameController(GameModel model, GameView view) {
+    private String username;
+    private String difficulty;
+
+    // Add username and difficulty to constructor
+    public GameController(GameModel model, GameView view, String username, String difficulty) {
         this.model = model;
+        this.username = username;
+        this.difficulty = difficulty;
         if (view != null) {
             setView(view);
         }
     }
-
     public void setView(GameView view) {
         this.view = view;
         initGame();
@@ -125,6 +130,9 @@ public class GameController {
 
             // Score Calculation: (lives * 150) + (initial_payloads * 50)
             int score = (lives * 150) + (model.getInitialPayloads() * 50);
+
+            cmsc125.project1.models.LeaderboardsModel.saveScore(username, difficulty, score);
+
             String message = String.format("All payloads decrypted. System Secured!\n\nFinal Score: %d", score);
             JOptionPane.showMessageDialog(view, message, "Victory", JOptionPane.INFORMATION_MESSAGE);
         }
@@ -136,10 +144,19 @@ public class GameController {
             AudioManager.playSound("bit_lose.wav");
             view.getSecurityRingPanel().triggerSystemFailure();
             view.getAlphabetButtons().values().forEach(b -> b.setEnabled(false));
-            JOptionPane.showMessageDialog(view, "Root access compromised! The word was: " + secretWord, "System Failure", JOptionPane.ERROR_MESSAGE);
+
+            // --- NEW CODE: Record score on loss ---
+            // Calculate score (since lives = 0, they will only get points for the difficulty/payloads)
+            // You can adjust this formula if you want to give points for payloads successfully decrypted:
+            // e.g., int payloadsDecrypted = model.getInitialPayloads() - currentPayloads;
+            int payloadsDecrypted = model.getInitialPayloads() - currentPayloads;
+            int score = (lives * 150) + (payloadsDecrypted * 100);
+            cmsc125.project1.models.LeaderboardsModel.saveScore(username, difficulty, score);
+            // --------------------------------------
+
+            JOptionPane.showMessageDialog(view, "Root access compromised! The word was: " + secretWord + "\nFinal Score: " + score, "System Failure", JOptionPane.ERROR_MESSAGE);
         }
     }
-
     public void dispose() {
         System.out.println("GameController disposed.");
     }

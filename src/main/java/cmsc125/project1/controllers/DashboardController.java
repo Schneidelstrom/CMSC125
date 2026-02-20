@@ -21,11 +21,14 @@ public class DashboardController {
     private final Set<String> activeBGApps = new HashSet<>();
     private static final Set<String> BG_APPS = Set.of("Play", "About", "How to Play");
     private final Map<String, Point> lastAppPositions = new HashMap<>();
+    private final String currentUser;
 
-    public DashboardController(DashboardModel model, DashboardView view, Runnable logoutHandler) {
+    // Update constructor
+    public DashboardController(DashboardModel model, DashboardView view, Runnable logoutHandler, String currentUser) {
         this.model = model;
         this.view = view;
         this.logoutHandler = logoutHandler;
+        this.currentUser = currentUser; // Save it!
 
         initDesktop();
         initSystemMenu();
@@ -74,7 +77,7 @@ public class DashboardController {
             final int choice = i;
             button.addActionListener(e -> {
                 int payloads = (choice == 0) ? 3 : (choice == 1) ? 5 : 7;
-                launchApp("Play", payloads);
+                launchApp("Play", payloads, difficulties[choice]);
                 SwingUtilities.getWindowAncestor(panel).dispose();
             });
             panel.add(button);
@@ -103,11 +106,11 @@ public class DashboardController {
     }
 
     private void launchApp(String appName) {
-        launchApp(appName, 0);
+        launchApp(appName, 0, "");
     }
 
-    private void launchApp(String appName, int payloads) {
-        JInternalFrame frame = createFrameInstance(appName, payloads);
+    private void launchApp(String appName, int payloads, String difficulty) {
+        JInternalFrame frame = createFrameInstance(appName, payloads, difficulty);
 
         if (lastAppPositions.containsKey(appName)) {
             frame.setLocation(lastAppPositions.get(appName));
@@ -153,9 +156,14 @@ public class DashboardController {
         frame.setLocation(x, Math.max(0, y - 40));
     }
 
-    private JInternalFrame createFrameInstance(String appName, int payloads) {
+private JInternalFrame createFrameInstance(String appName, int payloads, String difficulty) {
         switch (appName) {
             case "About": return new AboutView();
+            case "Leaderboards": 
+                cmsc125.project1.models.LeaderboardsModel lm = new cmsc125.project1.models.LeaderboardsModel();
+                cmsc125.project1.views.LeaderboardsView lv = new cmsc125.project1.views.LeaderboardsView();
+                new cmsc125.project1.controllers.LeaderboardsController(lm, lv);
+                return lv;
             case "Settings":
                 SettingsModel sm = new SettingsModel();
                 SettingsView sv = new SettingsView();
@@ -163,16 +171,11 @@ public class DashboardController {
                 return sv;
             case "Play":
                 GameModel gm = new GameModel(payloads);
-                // The controller is created here and passed to the view
-                GameController gc = new GameController(gm, null); // View is null initially
-                GameView gv = new GameView(gc::handleKeypress); // Pass the method reference
-                gc.setView(gv); // Now set the view in the controller
+                // UPDATE HERE: Pass currentUser and difficulty as the 3rd and 4th arguments
+                GameController gc = new GameController(gm, null, currentUser, difficulty); 
+                GameView gv = new GameView(gc::handleKeypress); 
+                gc.setView(gv); 
                 return gv;
-            case "How to Play":
-                HowToPlayModel htpModel = new HowToPlayModel();
-                HowToPlayView htpView = new HowToPlayView();
-                new HowToPlayController(htpModel, htpView);
-                return htpView;
             default:
                 JInternalFrame f = new JInternalFrame(appName, true, true, true, true);
                 f.setSize(400, 300);

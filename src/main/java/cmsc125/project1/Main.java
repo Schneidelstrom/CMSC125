@@ -77,7 +77,7 @@ public class Main extends JFrame {
 
         Runnable onLogout = this::showLoginScreen;
 
-        currentController = new DashboardController(model, view, onLogout);
+        currentController = new DashboardController(model, view, onLogout, username);
 
         addCard(view, DASHBOARD_CARD);
         cardLayout.show(mainPanel, DASHBOARD_CARD);

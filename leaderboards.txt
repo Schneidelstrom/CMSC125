@@ -1,0 +1,2 @@
+arst,Script Kiddie,600
+rstg,System Breach,0
