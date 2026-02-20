@@ -23,9 +23,9 @@ public class Main extends JFrame {
     public Main() {
         super(AppInfo.getAppName() + " Login");
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-        setMinimumSize(new Dimension(1280, 720));
-        setSize(1280, 720);
-        setLocationRelativeTo(null);
+        setMinimumSize(new Dimension(1302, 738));
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
+
         AppInfo.getInfo();
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override

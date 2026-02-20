@@ -3,16 +3,18 @@ package cmsc125.project1.views;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
+import java.io.IOException;
 import java.net.URL;
+import javax.imageio.ImageIO;
 
 public class HowToPlayView extends JInternalFrame {
     private JTextArea instructionArea;
-    private JLabel imageLabel;
+    private ImagePanel imagePanel;
     private JButton prevButton, nextButton;
 
     public HowToPlayView() {
         super("How to Play", true, true, true, true);
-        setSize(600, 500);
+        setSize(800, 600); // Increased default size slightly
         setLayout(new BorderLayout());
 
         instructionArea = new JTextArea();
@@ -23,13 +25,12 @@ public class HowToPlayView extends JInternalFrame {
         instructionArea.setBackground(new Color(30, 30, 30));
         instructionArea.setForeground(Color.GREEN);
         instructionArea.setBorder(new EmptyBorder(10, 10, 10, 10));
-        add(instructionArea, BorderLayout.NORTH);
 
-        imageLabel = new JLabel();
-        imageLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        imageLabel.setBackground(Color.BLACK);
-        imageLabel.setOpaque(true);
-        add(imageLabel, BorderLayout.CENTER);
+        add(new JScrollPane(instructionArea), BorderLayout.NORTH);
+
+        imagePanel = new ImagePanel();
+        imagePanel.setBackground(Color.BLACK);
+        add(imagePanel, BorderLayout.CENTER);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 10));
         buttonPanel.setBackground(new Color(30, 30, 30));
@@ -55,16 +56,17 @@ public class HowToPlayView extends JInternalFrame {
     public void updateContent(String text, String imagePath) {
         instructionArea.setText(text);
 
-        URL imgUrl = getClass().getResource(imagePath);
-        if (imgUrl != null) {
-            ImageIcon icon = new ImageIcon(imgUrl);
-            Image img = icon.getImage().getScaledInstance(1280, 720, Image.SCALE_SMOOTH);
-            imageLabel.setIcon(new ImageIcon(img));
-            imageLabel.setText("");
-        } else {
-            imageLabel.setIcon(null);
-            imageLabel.setForeground(Color.RED);
-            imageLabel.setText("Image not found: " + imagePath);
+        try {
+            URL imgUrl = getClass().getResource(imagePath);
+            if (imgUrl != null) {
+                Image img = ImageIO.read(imgUrl);
+                imagePanel.setImage(img);
+            } else {
+                System.err.println("Image not found: " + imagePath);
+                imagePanel.setImage(null);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -75,4 +77,21 @@ public class HowToPlayView extends JInternalFrame {
 
     public JButton getPrevButton() { return prevButton; }
     public JButton getNextButton() { return nextButton; }
+
+    private class ImagePanel extends JPanel {
+        private Image currentImage;
+
+        public void setImage(Image img) {
+            this.currentImage = img;
+            this.repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            super.paintComponent(g);
+            if (currentImage != null) {
+                g.drawImage(currentImage, 0, 0, getWidth(), getHeight(), this);
+            }
+        }
+    }
 }
