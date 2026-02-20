@@ -7,6 +7,7 @@
     <groupId>cmsc125</groupId>
     <artifactId>De_Crypt</artifactId>
     <version>1.0-RELEASE</version>
+    <inceptionYear>2026</inceptionYear>
 
     <properties>
         <maven.compiler.source>25</maven.compiler.source>
@@ -15,6 +16,27 @@
     </properties>
 
     <build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>**/*.properties</include>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>**/*.properties</exclude>
+                    <exclude>**/*.xml</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -75,7 +97,7 @@
                             </classPath>
                             <jre>
                                 <path>%JAVA_HOME%;%PATH%</path>
-                                <minVersion>11</minVersion>
+                                <minVersion>25</minVersion>
                                 <opts>
                                     <opt>-Dfile.encoding=UTF-8</opt>
                                 </opts>
