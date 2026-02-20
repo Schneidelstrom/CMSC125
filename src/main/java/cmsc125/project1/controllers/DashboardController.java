@@ -176,6 +176,11 @@ private JInternalFrame createFrameInstance(String appName, int payloads, String 
                 GameView gv = new GameView(gc::handleKeypress); 
                 gc.setView(gv); 
                 return gv;
+            case "How to Play":
+                HowToPlayModel htpModel = new HowToPlayModel();
+                HowToPlayView htpView = new HowToPlayView();
+                new HowToPlayController(htpModel, htpView);
+                return htpView;
             default:
                 JInternalFrame f = new JInternalFrame(appName, true, true, true, true);
                 f.setSize(400, 300);

@@ -14,7 +14,7 @@ public class HowToPlayView extends JInternalFrame {
 
     public HowToPlayView() {
         super("How to Play", true, true, true, true);
-        setSize(800, 600); // Increased default size slightly
+        setSize(800, 600);
         setLayout(new BorderLayout());
 
         instructionArea = new JTextArea();
