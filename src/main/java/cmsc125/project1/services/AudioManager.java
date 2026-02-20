@@ -1,19 +1,17 @@
 package cmsc125.project1.services;
 
-import javax.sound.sampled.AudioInputStream;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.Clip;
-import javax.sound.sampled.FloatControl;
+import javax.sound.sampled.*;
 import java.io.BufferedInputStream;
 import java.io.InputStream;
-import java.net.URL;
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class AudioManager {
     private static Clip bgmClip;
     private static final String ASSETS_PATH = "/assets/sounds/";
-    private static final ExecutorService soundPool = Executors.newSingleThreadExecutor();
+    private static final ExecutorService soundPool = Executors.newCachedThreadPool();
+
     public static int sfxVolume = 100, bgmVolume = 100;
     public static boolean sfxEnabled = true, bgmEnabled = true;
     public static String currentBGM = "";
@@ -21,14 +19,20 @@ public class AudioManager {
     public static void playSound(String fileName) {
         if (!sfxEnabled) return;
 
-        soundPool.submit(() -> {
-            try {
-                Clip clip = loadClip(fileName);
-                if (clip != null) {
-                    setClipVolume(clip, sfxVolume);
-                    clip.start();
+        soundPool.submit(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Clip clip = loadClip(fileName);
+                    if (clip != null) {
+                        setClipVolume(clip, sfxVolume);
+                        clip.start();
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error playing SFX [" + fileName + "]: " + e.getMessage());
+                    e.printStackTrace();
                 }
-            } catch (Exception e) { e.printStackTrace(); }
+            }
         });
     }
 
@@ -40,32 +44,41 @@ public class AudioManager {
             currentBGM = fileName;
         }
 
-        currentBGM = fileName;
-
         if (!bgmEnabled) {
             stopBGM();
             return;
         }
 
-        if (bgmClip != null && bgmClip.isRunning()) return;
+        if (bgmClip != null && bgmClip.isRunning()) {
+            System.out.println(bgmClip);
+            return;
+        }
 
         String finalFileName = fileName;
-        soundPool.submit(() -> {
-            stopBGM();
-            try {
-                bgmClip = loadClip(finalFileName);
-                if (bgmClip != null) {
-                    setClipVolume(bgmClip, bgmVolume);
-                    bgmClip.loop(Clip.LOOP_CONTINUOUSLY);
-                    bgmClip.start();
+        soundPool.submit(new Runnable() {
+            @Override
+            public void run() {
+                stopBGM();
+                try {
+                    bgmClip = loadClip(finalFileName);
+                    if (bgmClip != null) {
+                        setClipVolume(bgmClip, bgmVolume);
+                        bgmClip.loop(Clip.LOOP_CONTINUOUSLY);
+                        bgmClip.start();
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error playing BGM [" + finalFileName + "]: " + e.getMessage());
+                    e.printStackTrace();
                 }
-            } catch (Exception e) { e.printStackTrace(); }
+            }
         });
     }
 
     public static void stopBGM() {
         if (bgmClip != null) {
-            if (bgmClip.isRunning()) bgmClip.stop();
+            if (bgmClip.isRunning()) {
+                bgmClip.stop();
+            }
             bgmClip.close();
             bgmClip = null;
         }
@@ -78,14 +91,20 @@ public class AudioManager {
         }
     }
 
-    private static Clip loadClip(String fileName) throws Exception {
-        URL url = AudioManager.class.getResource(ASSETS_PATH + fileName);
-        if (url == null) return null;
-        InputStream audioSrc = url.openStream();
-        InputStream bufferedIn = new BufferedInputStream(audioSrc);
-        AudioInputStream stream = AudioSystem.getAudioInputStream(bufferedIn);
+    private static Clip loadClip(String fileName) throws LineUnavailableException, IOException, UnsupportedAudioFileException {
+        InputStream is = AudioManager.class.getResourceAsStream(ASSETS_PATH + fileName);
+
+        if (is == null) {
+            System.out.println("CRITICAL ERROR: Audio file not found: " + ASSETS_PATH + fileName);
+            return null;
+        }
+
+        InputStream bufferedIn = new BufferedInputStream(is);
+        AudioInputStream audioStream = AudioSystem.getAudioInputStream(bufferedIn);
+
         Clip clip = AudioSystem.getClip();
-        clip.open(stream);
+        clip.open(audioStream);
+
         return clip;
     }
 
@@ -93,13 +112,20 @@ public class AudioManager {
         if (clip == null) return;
         try {
             FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
+
             float range = gainControl.getMaximum() - gainControl.getMinimum();
             float gain = (range * (volumePercent / 100.0f)) + gainControl.getMinimum();
 
-            if (volumePercent <= 0) gain = gainControl.getMinimum();
-            if (volumePercent >= 100) gain = gainControl.getMaximum();
+            if (volumePercent <= 0) {
+                gain = gainControl.getMinimum();
+            }
+            if (volumePercent >= 100) {
+                gain = gainControl.getMaximum();
+            }
 
             gainControl.setValue(gain);
-        } catch (Exception e) { }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Volume control not supported for this clip.");
+        }
     }
 }

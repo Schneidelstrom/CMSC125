@@ -15,7 +15,6 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
-import java.awt.event.WindowListener;
 
 public class LogInView extends JPanel {
     private JTextField usernameField;
