@@ -6,8 +6,7 @@ import cmsc125.project1.models.SettingsModel;
 import cmsc125.project1.services.AudioManager;
 import cmsc125.project1.views.*;
 
-import javax.swing.JInternalFrame;
-import javax.swing.JToggleButton;
+import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
 import javax.swing.event.InternalFrameEvent;
 import java.awt.*;
@@ -38,13 +37,17 @@ public class DashboardController {
         for (String appName : model.getApps()) {
             view.addDesktopIcon(appName, e -> {
                 AudioManager.playSound("icon_click.wav");
-                launchApp(appName);
+                if ("Play".equals(appName)) {
+                    showDifficultyChooser();
+                } else {
+                    launchApp(appName);
+                }
             });
         }
     }
 
     private void initSystemMenu() {
-        view.addPlayListener(e -> launchApp("Play"));
+        view.addPlayListener(e -> showDifficultyChooser());
         view.addLogoutListener(e -> {
             if (view.showConfirm("Are you sure you want to logout?") == 0) {
                 AudioManager.playSound("logged_out.wav");
@@ -56,6 +59,44 @@ public class DashboardController {
         view.addShutdownListener(e -> performShutdown());
     }
 
+    private void showDifficultyChooser() {
+        String[] difficulties = {"Script Kiddie", "System Breach", "Root Override"};
+        
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        
+        JLabel label = new JLabel("Select a difficulty level:");
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(15));
+
+        for (int i = 0; i < difficulties.length; i++) {
+            JButton button = new JButton(difficulties[i]);
+            button.setAlignmentX(Component.CENTER_ALIGNMENT);
+            final int choice = i;
+            button.addActionListener(e -> {
+                int payloads = (choice == 0) ? 3 : (choice == 1) ? 5 : 7;
+                launchApp("Play", payloads);
+                SwingUtilities.getWindowAncestor(panel).dispose();
+            });
+            panel.add(button);
+            if (i < difficulties.length - 1) {
+                panel.add(Box.createVerticalStrut(10));
+            }
+        }
+
+        JOptionPane.showOptionDialog(
+                view,
+                panel,
+                "Difficulty Selection",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                new Object[]{},
+                null
+        );
+    }
+
     private void performShutdown() {
         if (view.showConfirm("Shut down system?") == 0) {
             new Thread(AudioManager::stopBGM).start();
@@ -64,7 +105,11 @@ public class DashboardController {
     }
 
     private void launchApp(String appName) {
-        JInternalFrame frame = createFrameInstance(appName);
+        launchApp(appName, 0);
+    }
+
+    private void launchApp(String appName, int payloads) {
+        JInternalFrame frame = createFrameInstance(appName, payloads);
 
         if (lastAppPositions.containsKey(appName)) {
             frame.setLocation(lastAppPositions.get(appName));
@@ -110,7 +155,7 @@ public class DashboardController {
         frame.setLocation(x, Math.max(0, y - 40));
     }
 
-    private JInternalFrame createFrameInstance(String appName) {
+    private JInternalFrame createFrameInstance(String appName, int payloads) {
         switch (appName) {
             case "About": return new AboutView();
             case "Settings":
@@ -119,9 +164,11 @@ public class DashboardController {
                 new SettingsController(sm, sv);
                 return sv;
             case "Play":
-                GameModel gm = new GameModel();
-                GameView gv = new GameView();
-                new GameController(gm, gv);
+                GameModel gm = new GameModel(payloads);
+                // The controller is created here and passed to the view
+                GameController gc = new GameController(gm, null); // View is null initially
+                GameView gv = new GameView(gc::handleKeypress); // Pass the method reference
+                gc.setView(gv); // Now set the view in the controller
                 return gv;
             default:
                 JInternalFrame f = new JInternalFrame(appName, true, true, true, true);

@@ -3,9 +3,14 @@ package cmsc125.project1.views;
 import cmsc125.project1.services.AppInfo;
 
 import javax.swing.*;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 import javax.swing.text.*;
 
 public class GameView extends JInternalFrame {
@@ -15,12 +20,30 @@ public class GameView extends JInternalFrame {
     private JPanel payloadBoxPanel;
     private JTextPane wordDisplay;
 
-    public GameView() {
+    public GameView(Consumer<Character> keyPressHandler) {
         super("Game", true, true, true, true);
         initLayout();
         setMinimumSize(new Dimension(1125, 600));
         setSize(1125, 600);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        // Make the frame focusable and add the reliable KeyListener
+        setFocusable(true);
+        addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyTyped(KeyEvent e) {
+                // When a key is typed, call the handler provided by the controller
+                keyPressHandler.accept(e.getKeyChar());
+            }
+        });
+
+        // When the window is activated, it should request focus to receive key events
+        addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameActivated(InternalFrameEvent e) {
+                requestFocusInWindow();
+            }
+        });
     }
 
     private void initLayout() {
@@ -29,12 +52,10 @@ public class GameView extends JInternalFrame {
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 1.0;
 
-        // Left Side (60% width)
         gbc.gridx = 0;
         gbc.weightx = 0.6;
         mainPanel.add(createLeftPanel(), gbc);
 
-        // Right Side (40% width)
         gbc.gridx = 1;
         gbc.weightx = 0.4;
         mainPanel.add(createRightPanel(), gbc);
@@ -48,7 +69,6 @@ public class GameView extends JInternalFrame {
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.CENTER));
         topPanel.setBackground(new Color(0, 0, 51));
         topPanel.setBorder(BorderFactory.createLineBorder(Color.CYAN, 1));
-
         JLabel title = new JLabel(AppInfo.getAppName());
         title.setForeground(Color.CYAN);
         title.setFont(new Font("Monospaced", Font.BOLD, 48));
@@ -57,12 +77,9 @@ public class GameView extends JInternalFrame {
     }
 
     private JPanel createLeftPanel() {
-        // The main container for the left side still uses GridBag to split
-        // the "Word Box" (top) and "Keyboard" (bottom).
         JPanel leftPanel = new JPanel(new GridBagLayout());
         leftPanel.setOpaque(false);
         GridBagConstraints gbc = new GridBagConstraints();
-
         gbc.gridx = 0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         gbc.weightx = 1.0;
@@ -121,10 +138,8 @@ public class GameView extends JInternalFrame {
         rightPanel.setOpaque(false);
         rightPanel.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.DARK_GRAY));
         rightPanel.setPreferredSize(new Dimension(400, 0));
-
         securityRingPanel = new SecurityRingPanel();
         rightPanel.add(securityRingPanel, BorderLayout.CENTER);
-
         return rightPanel;
     }
 
@@ -146,13 +161,9 @@ public class GameView extends JInternalFrame {
     }
 
     private JPanel createKeyboardRow(String letters) {
-        // FlowLayout.CENTER automatically centers the buttons in the row, and naturally look keyboard staggered
         JPanel row = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         row.setOpaque(false);
-
-        char[] chars = letters.toCharArray();
-        for (int i = 0; i < chars.length; i++) {
-            char c = chars[i];
+        for (char c : letters.toCharArray()) {
             JButton btn = createStyledButton(String.valueOf(c));
             alphabetButtons.put(c, btn);
             row.add(btn);
@@ -192,10 +203,7 @@ public class GameView extends JInternalFrame {
 
     public void updateWordDisplay(String secretPhrase, String guessedLetters) {
         StringBuilder displayString = new StringBuilder();
-        char[] phraseChars = secretPhrase.toUpperCase().toCharArray();
-
-        for (int i = 0; i < phraseChars.length; i++) {
-            char c = phraseChars[i];
+        for (char c : secretPhrase.toUpperCase().toCharArray()) {
             if (c == ' ') {
                 displayString.append("   ");
             } else {
@@ -218,22 +226,17 @@ public class GameView extends JInternalFrame {
     }
 
     public void markLetterAsUsed(char letter, boolean isCorrect) {
-        JButton btn = alphabetButtons.get(letter);
+        JButton btn = alphabetButtons.get(Character.toUpperCase(letter));
         if (btn != null) {
             btn.setEnabled(false);
-            if (isCorrect) {
-                btn.setBackground(new Color(100, 255, 100));
-            } else {
-                btn.setBackground(Color.GRAY);
-            }
+            btn.setBackground(isCorrect ? new Color(0, 150, 0) : new Color(150, 0, 0));
         }
     }
 
     public void resetKeyboard() {
-        for (Character key : alphabetButtons.keySet()) {
-            JButton btn = alphabetButtons.get(key);
+        for (JButton btn : alphabetButtons.values()) {
             btn.setEnabled(true);
-            btn.setBackground(new Color(45, 45, 45)); // Reset to original dark color
+            btn.setBackground(new Color(45, 45, 45));
         }
     }
 }
