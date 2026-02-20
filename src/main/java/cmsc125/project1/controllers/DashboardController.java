@@ -61,21 +61,42 @@ public class DashboardController {
 
     private void showDifficultyChooser() {
         String[] difficulties = {"Script Kiddie", "System Breach", "Root Override"};
-        int choice = JOptionPane.showOptionDialog(
+        
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        
+        JLabel label = new JLabel("Select a difficulty level:");
+        label.setAlignmentX(Component.CENTER_ALIGNMENT);
+        panel.add(label);
+        panel.add(Box.createVerticalStrut(15));
+
+        // Create a button for each difficulty and add it to the panel
+        for (int i = 0; i < difficulties.length; i++) {
+            JButton button = new JButton(difficulties[i]);
+            button.setAlignmentX(Component.CENTER_ALIGNMENT);
+            final int choice = i;
+            button.addActionListener(e -> {
+                int payloads = (choice == 0) ? 3 : (choice == 1) ? 5 : 7;
+                launchApp("Play", payloads);
+                // Close the dialog
+                SwingUtilities.getWindowAncestor(panel).dispose();
+            });
+            panel.add(button);
+            if (i < difficulties.length - 1) {
+                panel.add(Box.createVerticalStrut(10));
+            }
+        }
+
+        JOptionPane.showOptionDialog(
                 view,
-                "Select a difficulty level:",
+                panel,
                 "Difficulty Selection",
                 JOptionPane.DEFAULT_OPTION,
-                JOptionPane.QUESTION_MESSAGE,
+                JOptionPane.PLAIN_MESSAGE,
                 null,
-                difficulties,
-                difficulties[0]
+                new Object[]{}, // No default buttons
+                null
         );
-
-        if (choice != -1) {
-            int payloads = (choice == 0) ? 3 : (choice == 1) ? 5 : 7;
-            launchApp("Play", payloads);
-        }
     }
 
     private void performShutdown() {
