@@ -13,6 +13,10 @@
       in
       {
         devShells.default = pkgs.mkShell {
+          buildInputs = with pkgs; [
+             alsa-lib
+             alsa-plugins
+          ];
           packages = with pkgs; [
              maven
              javaPackages.compiler.openjdk25

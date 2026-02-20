@@ -1,6 +1,7 @@
 package cmsc125.project1.controllers;
 
 import cmsc125.project1.models.GameModel;
+import cmsc125.project1.services.AudioManager;
 import cmsc125.project1.views.GameView;
 
 import javax.swing.*;
@@ -55,6 +56,7 @@ public class GameController {
         });
     }
 
+    // work here
     public void handleKeypress(char letter) {
         JButton button = view.getAlphabetButtons().get(Character.toUpperCase(letter));
         if (button != null && button.isEnabled()) {
@@ -63,6 +65,7 @@ public class GameController {
     }
 
     private void processGuess(char letter) {
+        AudioManager.playSound("key_press2.wav");
         if (gameOver || guessedLetters.contains(Character.toUpperCase(letter))) {
             return;
         }
@@ -78,6 +81,21 @@ public class GameController {
             checkWinCondition();
         } else {
             lives--;
+            if (lives == 6) {
+                AudioManager.playSound("break2.wav");
+            }
+            else if (lives == 5) {
+                AudioManager.playSound("break2.wav");
+            }
+            else if (lives == 3) {
+                AudioManager.playSound("break3.wav");
+            }
+            else if (lives == 0) {
+                AudioManager.playSound("break2.wav");
+            }
+            else {
+                AudioManager.playSound("break1.wav");
+            }
             view.getSecurityRingPanel().updateStatus(lives);
             checkLossCondition();
         }
