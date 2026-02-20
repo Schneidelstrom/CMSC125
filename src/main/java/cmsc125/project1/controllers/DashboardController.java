@@ -1,8 +1,6 @@
 package cmsc125.project1.controllers;
 
-import cmsc125.project1.models.DashboardModel;
-import cmsc125.project1.models.GameModel;
-import cmsc125.project1.models.SettingsModel;
+import cmsc125.project1.models.*;
 import cmsc125.project1.services.AudioManager;
 import cmsc125.project1.views.*;
 
@@ -170,6 +168,11 @@ public class DashboardController {
                 GameView gv = new GameView(gc::handleKeypress); // Pass the method reference
                 gc.setView(gv); // Now set the view in the controller
                 return gv;
+            case "How to Play":
+                HowToPlayModel htpModel = new HowToPlayModel();
+                HowToPlayView htpView = new HowToPlayView();
+                new HowToPlayController(htpModel, htpView);
+                return htpView;
             default:
                 JInternalFrame f = new JInternalFrame(appName, true, true, true, true);
                 f.setSize(400, 300);
