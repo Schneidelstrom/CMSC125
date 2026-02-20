@@ -88,11 +88,12 @@ public class GameView extends JInternalFrame {
         gbc.weighty = 0.0;
         gbc.insets = new Insets(20, 50, 20, 50);
         gbc.anchor = GridBagConstraints.NORTH;
+
         JPanel wordContainer = new JPanel(new BorderLayout());
         wordContainer.setBackground(new Color(5, 5, 40));
         wordContainer.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(100, 100, 255), 1),
-            BorderFactory.createEmptyBorder(20, 20, 20, 20)
+                BorderFactory.createLineBorder(new Color(100, 100, 255), 1),
+                BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
         wordDisplay = new JTextPane();
@@ -113,21 +114,20 @@ public class GameView extends JInternalFrame {
         gbc.gridy = 1;
         gbc.weighty = 1.0;
         gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.NONE;
-        gbc.insets = new Insets(0, 10, 20, 10);
-        JPanel keyboardWrapper = new JPanel(new GridBagLayout());
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.insets = new Insets(10, 10, 20, 10);
+
+        // Create wrapper panel to hold the rows and BoxLayout.Y_AXIS stacks components vertically (top to bottom) for simple stacking.
+        JPanel keyboardWrapper = new JPanel();
+        keyboardWrapper.setLayout(new BoxLayout(keyboardWrapper, BoxLayout.Y_AXIS));
         keyboardWrapper.setOpaque(false);
-        GridBagConstraints kbc = new GridBagConstraints();
-        kbc.gridx = 0;
-        kbc.fill = GridBagConstraints.BOTH;
-        kbc.weightx = 1.0;
-        kbc.weighty = 1.0;
-        kbc.gridy = 0;
-        keyboardWrapper.add(createKeyboardRow("QWERTYUIOP"), kbc);
-        kbc.gridy = 1;
-        keyboardWrapper.add(createKeyboardRow("ASDFGHJKL"), kbc);
-        kbc.gridy = 2;
-        keyboardWrapper.add(createKeyboardRow("ZXCVBNM"), kbc);
+
+        keyboardWrapper.add(createKeyboardRow("QWERTYUIOP"));
+        keyboardWrapper.add(Box.createVerticalStrut(15));
+        keyboardWrapper.add(createKeyboardRow("ASDFGHJKL"));
+        keyboardWrapper.add(Box.createVerticalStrut(15));
+        keyboardWrapper.add(createKeyboardRow("ZXCVBNM"));
+
         leftPanel.add(keyboardWrapper, gbc);
 
         return leftPanel;
@@ -147,13 +147,16 @@ public class GameView extends JInternalFrame {
         JPanel bottomPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 20, 15));
         bottomPanel.setBackground(new Color(0, 0, 51));
         bottomPanel.setBorder(BorderFactory.createLineBorder(Color.WHITE, 1));
+
         JLabel label = new JLabel("Payloads Remaining:");
         label.setForeground(new Color(0, 255, 204));
         label.setFont(new Font("Monospaced", Font.BOLD, 18));
         bottomPanel.add(label);
+
         payloadBoxPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         payloadBoxPanel.setOpaque(false);
         bottomPanel.add(payloadBoxPanel);
+
         return bottomPanel;
     }
 
@@ -174,7 +177,9 @@ public class GameView extends JInternalFrame {
         btn.setPreferredSize(new Dimension(60, 60));
         btn.setBackground(new Color(45, 45, 45));
         btn.setForeground(Color.WHITE);
-        btn.setFocusable(false); // Keep this so buttons don't steal focus from the frame
+        btn.setFocusPainted(false);
+        btn.setContentAreaFilled(true);
+        btn.setOpaque(true);
         btn.setBorder(BorderFactory.createRaisedBevelBorder());
         return btn;
     }
