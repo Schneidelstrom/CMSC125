@@ -178,6 +178,7 @@ public class GameView extends JInternalFrame {
         btn.setBackground(new Color(45, 45, 45));
         btn.setForeground(Color.WHITE);
         btn.setFocusPainted(false);
+        btn.setFocusable(false); 
         btn.setContentAreaFilled(true);
         btn.setOpaque(true);
         btn.setBorder(BorderFactory.createRaisedBevelBorder());
