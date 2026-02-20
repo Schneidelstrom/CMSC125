@@ -4,6 +4,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.stream.Collectors;
 
 public class GameModel {
     private final int initialPayloads;
@@ -11,14 +17,34 @@ public class GameModel {
     private final List<String> sessionWords;
     private int currentWordIndex;
 
-    private static final List<String> WORD_BANK = Arrays.asList(
-            "KERNEL", "SEMAPHORE", "DEADLOCK", "THREAD", "PROCESS",
-            "VIRTUAL", "MEMORY", "SCHEDULER", "FILESYSTEM", "INTERRUPT",
-            "MUTEX", "PAGING", "SEGMENTATION", "CONCURRENCY", "SHELL",
-            "DRIVER", "BUFFER", "CACHE", "SOCKET", "FIREWALL"
-    );
+// Initialize the list using the resource path
+    private static final List<String> WORD_BANK = loadWords("/assets/word_bank.txt");
 
-    public GameModel(int payloads) {
+    private static List<String> loadWords(String resourcePath) {
+        // 1. Get the file from the classpath as an InputStream
+        try (InputStream is = GameModel.class.getResourceAsStream(resourcePath)) {
+            
+            // 2. Check if the file was actually found
+            if (is == null) {
+                System.err.println("Resource not found: " + resourcePath + ". Loading defaults.");
+                return fallbackWords();
+            }
+
+            // 3. Read the stream line by line
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
+                return reader.lines().collect(Collectors.toList());
+            }
+
+        } catch (IOException e) {
+            System.err.println("Error reading " + resourcePath + ". Loading defaults.");
+            return fallbackWords();
+        }
+    }
+
+    // A safe fallback just in case the file is missing from the built jar
+    private static List<String> fallbackWords() {
+        return Arrays.asList("KERNEL", "SEMAPHORE", "DEADLOCK", "THREAD", "PROCESS");
+    }    public GameModel(int payloads) {
         this.initialPayloads = payloads;
         this.lives = 7; // Default lives
         this.sessionWords = selectSessionWords(payloads);
